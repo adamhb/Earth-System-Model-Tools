@@ -124,3 +124,19 @@ timestep (at 10 yrs), dissaggregated by size class.
     ## [13,] 0.00000000 0.00000000                 100
 
 Summary stats
+
+    percent_change <- function(start,end){
+      pc <- (end - start) / start
+      return(na.omit(pc))
+    }
+
+    growth_rate_change <- percent_change(growth_rates_cm_perInd_perYr[,1], growth_rates_cm_perInd_perYr[,2])
+    agb_change <- percent_change(agb[,1], agb[,2])
+
+    print(paste("increasing RA from 0.1 to 0.4 results in a reduction of", as.numeric(growth_rate_change), "in growth rates (cm of dbh per ind.) at year 10"))
+
+    ## [1] "increasing RA from 0.1 to 0.4 results in a reduction of -0.560066137733111 in growth rates (cm of dbh per ind.) at year 10"
+
+    print(paste("increasing RA from 0.1 to 0.4 results in a reduction of", as.numeric(agb_change), "in AGB (kg per m2) at year 10"))
+
+    ## [1] "increasing RA from 0.1 to 0.4 results in a reduction of -0.188962319193911 in AGB (kg per m2) at year 10"
