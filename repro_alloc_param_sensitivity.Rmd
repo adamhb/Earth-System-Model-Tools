@@ -2,7 +2,7 @@
 title: "Parameter Sensitivity of Reproductive Allocation.Rmd"
 author: "Adam Hanbury-Brown and Rachel Ward"
 date: "August 2, 2021"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
