@@ -1,5 +1,5 @@
 source('settings.R')
-
+print("Cleaning census data...")
 #This script cleans census data from luquillo, BCI, SERC, and ?
 #to make it ready to calculate vital demographic rates such as recruitment
 
@@ -108,7 +108,7 @@ bci_from_names <- c("bid","date_new","treeID","latin","sp","status","dbh")
 luqfull_clean <- filter_for_canopy_trees(clean_cen_data(df = luqfull_raw,from_names = luqFieldNames,site_name = "luq"))
 bcifull_clean <- filter_for_canopy_trees(clean_cen_data(df = bcifull_raw,from_names = bci_from_names,site_name = "bci"))
 
-
+print("Done cleaning census data!")
 
 
 

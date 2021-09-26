@@ -2,8 +2,6 @@
 #in size class Z (dbh, mm)
 
 
-
-
 #Function to calculate recruitment rates based on
 #prior work by Kohyama et al., 2018 (Eqn 11) which accounts for
 #recruits that may have died before the next census interval 
@@ -36,7 +34,7 @@ getRecRate <- function(Nt0,Nt1,S_t1,M_t1){
 #for species spp
 #option to return the IDs of the alive trees
 getAliveTrees <- function(df,i,spp,output = "N"){
-  tmp <- df %>% filter(cen == i, status == "A", sp == spp)
+  tmp <- df %>% filter(cen == i, status == "A", sp == spp) #address the size class issue here?
   if(output == 'N'){
     return(nrow(tmp))
   }else{
@@ -94,38 +92,29 @@ getVitalRates <- function(cen_data,plot_area,site_name){
   i <- i+1 
   tmp <- getVitalRates_1spp(cen_data,sp,plot_area) %>% add_column(site = site_name)
   vital_rates <- rbind(vital_rates,tmp)
-  print(paste("done with",i,"of",length(unique(cen_data$sp)),"species"))
+  print(paste("done with",i,"of",length(unique(cen_data$sp)),"species at",site_name))
  }
 return(vital_rates)  
 }
 
-#calculate recruitment and mortality rates from the census data
-luq_size <- 500*320 #m2
-bci_size <- 5e4 #m2
+#############################################################################
+###calculate recruitment and mortality rates from the cleaned census data####
+#############################################################################
 
-luqVitalRates <- getVitalRates(luqfull_clean,luq_size,"luq")
+#specifying the size of each plot in m2. This is required for the area-based
+#demographic metrics
+luq_size <- 500*320 #m2
+bci_size <- 5e5 #m2
+
+#calculating the species-level demographic rates for each census interval
+luqVitalRates <- getVitalRates(luqfull_clean,luq_size,"luq") #this could be a good format to provide as a model ready data product
 bciVitalRates <- getVitalRates(bcifull_clean,bci_size,"bci")
 
+#could add pft info here....or further up?
 
+#merge all site data into one df
+vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates)
+write_csv(vitalRates_allSites,"benchmarking/vital_rates_all_site.csv")
 
-
-#plotting the recruitment observations
-rec_benchmarks <- rec_data1 %>% ggplot(mapping = aes(x = int, y = R_Koh, color = pft)) +
-  geom_point(size = 5) +
-  geom_line() +
-  scale_color_manual(values = pft.cols) +
-  ylab(label = "recruitment rate (# ind. per ha yr)") +
-  xlab(label = "census interval") +
-  theme_minimal() +
-  adams_theme
-
-makePNG(fig = rec_benchmarks, path_to_output.x = path_to_benchmarking_output, file_name = "rec_benchmarks")
-
-
-
-if(write_benchmark_csv == T){
-  write_csv(rec_benchmarks_with_dates_long, path = "benchmarking/bci_rec_benchmarks_long.csv")
-}
-
-print("created benchmarks")
+print("created recruitment benchmarks")
 
