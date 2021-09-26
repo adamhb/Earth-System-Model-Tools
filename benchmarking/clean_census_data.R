@@ -7,10 +7,22 @@ print("Cleaning census data...")
 #set path to census data#
 #########################
 path_to_data <- '~/cloud/gdrive/review_paper/quant_summary_data/'
-path_to_bci_data <- '~/cloud/gdrive/rec_submodel/data/observations/'
+path_to_bci_data <- '~/cloud/gdrive/rec_submodel/data/observations/' #if different from main data
 #################
 ###functions#####
 #################
+
+#loads text files with a given site name (format of files must be <site>full<census#>.txt")
+load_text_files <- function(data_path, site){
+  files <- list.files(path = data_path,pattern = paste0(site,'.+txt'))
+  output <- tibble()
+  for(i in 1:length(files)){
+    tmp <- read_delim(file = paste0(data_path,site,"full",i,'.txt'), delim = "\t") 
+    output <- rbind(output,tmp)
+  }
+  return(output)
+}
+
 
 #The below function selects and renames the data fields required to calculate demographic rates
 #from census data. As input it takes:
@@ -43,24 +55,21 @@ filter_for_canopy_trees <- function(df,Z = 200){
 }
 
 
+
+
 ##########################################################
 ###prepping luquillo data for standard cleaning function##
 ##########################################################
 
 #load luquillo data
-files <- list.files(path = path_to_data,pattern = '*txt')
-luqfull_raw <- tibble()
-for(i in 1:length(files)){
-  tmp <- read_delim(file = paste0(path_to_data,'luqfull',i,'.txt'), delim = "\t") 
-  luqfull_raw <- rbind(luqfull_raw,tmp)
-}
-
+luqfull_raw <- load_text_files(path_to_data,"luq")
 
 #Filter out sprouts (just focus on main stems)
 luqfull_raw <- luqfull_raw %>% filter(grepl("MAIN",Codes))
 
 #Anything with Status = "alive" or an "A" in the Codes
-#is considered alive, and all everything else is considered dead
+#is considered alive, and everything else is considered dead
+#Codes = A means its alive
 luqfull_raw <- luqfull_raw %>%
 mutate(status_new = case_when(
   Status == "alive" ~ "A",
@@ -74,7 +83,6 @@ mutate(status_new = case_when(
 #write out the field names of the luquillo census data that
 #we want to keep for further analysis
 luqFieldNames <- c("Census","Date","TreeID","Latin","Mnemonic","status_new","DBH")
-
 
 ##########################################################
 ###prepping BCI data for standard cleaning function#######
@@ -101,12 +109,59 @@ bcifull_raw <- bci.full.ahb %>%
 
 bci_from_names <- c("bid","date_new","treeID","latin","sp","status","dbh")
 
+##########################################################
+###prepping scbi data for standard cleaning function##
+##########################################################
+
+#load scbi data
+scbifull_raw <- load_text_files(path_to_data,"scbi") %>% 
+  filter(Stem == "main" | is.na(Stem)) #filter to just get main stems
+
+#could revisit these filters...
+scbifull_raw <- scbifull_raw %>%
+mutate(status_new = case_when(
+  Status == "alive" ~ "A",
+  (Status == "dead" | Status == "missing") ~ "D",
+  Status == "broken below" ~ "A", #the SCBI seems to report 'broken below' when the tree is still alive.
+  Status == "stem dead" ~ "D" #we are just focusing on main stems.
+  ))
+
+scbiFieldNames <- luqFieldNames 
+
+
+
+##########################################################
+###prepping serc data for standard cleaning function##
+##########################################################
+
+#load serc data
+sercfull_raw <- load_text_files(path_to_data,"serc") %>% 
+  filter(Stem == "main" | is.na(Stem)) %>% #filter to just get main stems 
+  mutate_at(.vars = "DBH",.funs = function(x){x*10}) #the serc data has dbh in cm instead of mm
+
+str(sercfull_raw)
+head(sercfull_raw)
+table(sercfull_raw$Status)
+
+#could revisit these filters...
+sercfull_raw <- sercfull_raw %>%
+  mutate(status_new = case_when(
+    Status == "alive" ~ "A",
+    (Status == "dead" | Status == "missing") ~ "D",
+    Status == "broken below" ~ "A", #the serc seems to report 'broken below' when the tree is still alive.
+    Status == "stem dead" ~ "D" #we are just focusing on main stems.
+  ))
+
+sercFieldNames <- luqFieldNames 
+
 #########################################################
 ####Apply standard cleaning function to all data sets####
 #########################################################
 
 luqfull_clean <- filter_for_canopy_trees(clean_cen_data(df = luqfull_raw,from_names = luqFieldNames,site_name = "luq"))
 bcifull_clean <- filter_for_canopy_trees(clean_cen_data(df = bcifull_raw,from_names = bci_from_names,site_name = "bci"))
+scbifull_clean <- filter_for_canopy_trees(clean_cen_data(df = scbifull_raw,from_names = scbiFieldNames,site_name = "scbi"))
+sercfull_clean <- filter_for_canopy_trees(clean_cen_data(df = sercfull_raw,from_names = sercFieldNames,site_name = "serc"))
 
 print("Done cleaning census data!")
 

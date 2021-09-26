@@ -1,6 +1,8 @@
 #This script calculates annual mortality rates and recruitment rates
 #in size class Z (dbh, mm)
 
+#constant
+m2_per_ha <- 1e4
 
 #Function to calculate recruitment rates based on
 #prior work by Kohyama et al., 2018 (Eqn 11) which accounts for
@@ -97,6 +99,15 @@ getVitalRates <- function(cen_data,plot_area,site_name){
 return(vital_rates)  
 }
 
+#this function calculates the middle day between two dates
+getCenIntDate <- function(tStart,tEnd){ #start and end dates
+  ex <- interval(ymd(tStart), ymd(tEnd))
+ mid <- ex@start + as.duration(ex)/2
+ return(as.Date(mid))
+}
+
+
+
 #############################################################################
 ###calculate recruitment and mortality rates from the cleaned census data####
 #############################################################################
@@ -105,16 +116,20 @@ return(vital_rates)
 #demographic metrics
 luq_size <- 500*320 #m2
 bci_size <- 5e5 #m2
+scbi_size <- 640*400 #m2
+serc_size <- 16 * m2_per_ha#m2
 
 #calculating the species-level demographic rates for each census interval
 luqVitalRates <- getVitalRates(luqfull_clean,luq_size,"luq") #this could be a good format to provide as a model ready data product
 bciVitalRates <- getVitalRates(bcifull_clean,bci_size,"bci")
-
+scbiVitalRates <- getVitalRates(scbifull_clean,scbi_size,"scbi") #this could be a good format to provide as a model ready data product
+sercVitalRates <- getVitalRates(sercfull_clean,serc_size,"serc")
 #could add pft info here....or further up?
 
 #merge all site data into one df
-vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates)
-write_csv(vitalRates_allSites,"benchmarking/vital_rates_all_site.csv")
+vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates,scbiVitalRates,sercVitalRates)
+
+write_csv(vitalRates_allSites,"benchmarking/vital_rates_all_sites.csv")
 
 print("created recruitment benchmarks")
 
