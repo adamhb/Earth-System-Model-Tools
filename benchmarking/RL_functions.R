@@ -62,12 +62,17 @@ get_repro_total_m2 <- function(data, fruit_mass = fruit_mass_df, trap_size_m2 = 
   #data cols are: sp, fecha, census, trap, part, quantity, mass
   #part codes are as in METADATA BCI SEED RAIN, 
   #fruit_mass_df cols are: "sp"  = sp6 code, "FRUIT_DRY" = dry mature fruit mass 
+  
   repro_mass <- get_part_mass_total(data, parts = c(0, 1, 2, 5, 6, 8, 9), trap_size_m2 = 0.5, by_sp = T) %>% 
+    #parts 3, 4, 7, 10 are excluded so as not to double count material 
     group_by(sp) %>% 
     summarise(repro_mass_sp = sum(mass_sum_sp), 
               repro_mass_sp_m2 = sum(mass_m2_sp))
   
-  mfe_mass<- get_mf_eq_mass(data, fruit_mass = fruit_mass_df) %>% ###### will use default parts, change if want to include capsules
+  mfe_mass<- get_mf_eq_mass(data, fruit_mass = fruit_mass_df) %>% 
+    #default parts for which to extrapolate mature fruit mass are 3, 4, 7, 10
+    #per personal communication from Joe Wright: 
+    #it's likely that part 4, fragments, should be multiplied by a sp specific ratio, 1:1 assumption is conservative
     group_by(sp) %>% 
     summarise(mfe_mass = sum(mf_eq, na.rm = T))
   
