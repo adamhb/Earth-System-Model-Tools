@@ -3,7 +3,7 @@ library(tidyverse)
 
 
 data_path <- "~/Desktop/NGEE-Tropics/BCI_data/"
-BCI_mo_RL <- read_csv(paste(data_path,"BCI_mo_RL.csv", sep = "")
+BCI_mo_RL <- read_csv(paste(data_path,"BCI_mo_RL.csv", sep = ""))
 
 BCI_mo_RL %>% 
   group_by(Year) %>% 
