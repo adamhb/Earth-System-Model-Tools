@@ -86,7 +86,7 @@ R_yr_corr_temp<-
 L_yr_corr <- L_yr %>% 
   mutate(Lmass_m2_corr = Lmass_m2*1.10)
 
-##source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
+##leaf herbivory correction source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
 ## see brr_npp_r1.txt, estsimated ~ 50g/m2yr lost to insect herbivory, ~30 g/m2yr to vert. herbiv.
 ## this is proprtional to ~ 10% of the observed litterfall flux
 

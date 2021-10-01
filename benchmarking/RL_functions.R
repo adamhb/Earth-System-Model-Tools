@@ -2,10 +2,7 @@
 
 library(tidyverse)
 #############################################Functions for trap data 
-
-
-
-####################get mass of designated litterfall part codes
+##get mass of designated litterfall part codes
 
 get_part_mass_total <- function(data, parts, trap_size_m2 = 0.5, by_sp = F){
   #data is raw, in form sp, fecha, census, trap, part, quantity, mass
@@ -31,7 +28,7 @@ get_part_mass_total <- function(data, parts, trap_size_m2 = 0.5, by_sp = F){
 }
 
 
-#####################get mature fruit equivalent mass from relevant part codes 
+##get mature fruit equivalent mass from relevant part codes 
 get_mf_eq_mass <- function (data, parts = c(3, 4, 7, 10), fruit_mass = fruit_mass_df) {
   
   #data cols are: sp, fecha, census, trap, part, quantity, mass
@@ -55,7 +52,7 @@ get_mf_eq_mass <- function (data, parts = c(3, 4, 7, 10), fruit_mass = fruit_mas
   
 }
 
-################get total reproductive mass total, including correction from herbivory 
+##get total reproductive mass total, including correction from herbivory 
 
 get_repro_total_m2 <- function(data, fruit_mass = fruit_mass_df, trap_size_m2 = 0.5){
   
