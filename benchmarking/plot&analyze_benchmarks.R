@@ -1,7 +1,11 @@
 #This script is used to plot/analyze the recruitment data
+library(ggplot2)
+library(tidyverse)
 source('utils/figure_formatting_esm_tools.R')
 source('utils/supporting_funcs_esm_tools.R')
 
+vitalRates_allSites <- read_csv("benchmarking/vital_rates_all_site.csv")
+m2_per_ha <- 1e4
 ########################################################
 #######Plotting recruitment data########################
 ########################################################
@@ -55,7 +59,7 @@ rec_benchmarks_plot_over_time <- df_plot_over_time %>%
 #was this right after a hurricane?
 rec_benchmarks_plot_over_time
 
-
+vitalRates_allSites %>% filter(site == "luq")
 
 
 

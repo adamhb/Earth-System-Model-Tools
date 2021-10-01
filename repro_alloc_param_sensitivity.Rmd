@@ -15,6 +15,7 @@ Install Packages
 library(ncdf4)
 library(tidyverse)
 library(lubridate)
+source('generalFunctions.R') #source the general functions in this repo
 ```
 
 

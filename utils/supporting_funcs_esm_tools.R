@@ -1,3 +1,11 @@
+#constants
+g_per_kg <- 1000
+yrs_per_day <- 1/365
+days_per_yr <- 365
+has_per_m2 <- 1e-4
+m2_per_ha <- 1e4
+sec_per_day <- 60*60*24   
+
 
 pft_names <- c("LD_DI", "LD_DT", "ST_DI", "ST_DT")
 path_to_figures <- "figures/"

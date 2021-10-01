@@ -1,9 +1,13 @@
+#This script is used to visualize how fixed window running means for solar radiation and moisture deficit days behave relative to exponential moving averages of the variables. This is done to calibrate the parameters of the exponential moving average to find parameter values that best match the fixed window moving averages that were used by the Tree Recruitment Scheme.
+
+#The data used to visualize the behavior of fixed window moving averages and exponential moving averages are from FATES (for par at the forest floor) and ED2 (for moisture deficit days)
+
 library(ncdf4)
 library(tidyverse)
 library(lubridate)
 
 source('generalFunctions.R')
-source('settings.R')
+source('utils/supporting_funcs_esm_tools.R')
 
 #Fates data
 data_path <- '~/cloud/gdrive/FATES/FATES_data'
@@ -60,5 +64,5 @@ ggplot(data = FATES_rMeans,
   theme_minimal()
 
 
-# a factor of 3/7 seems to get the ema to match the regular moving average, but this needs more testing
+#A factor of 3/7 seems to get the ema to match the regular moving average, but this needs more testing
 

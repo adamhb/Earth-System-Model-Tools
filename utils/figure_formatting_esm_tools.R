@@ -6,7 +6,7 @@ pft.cols <- c("darkolivegreen2","darkolivegreen4","lightskyblue", "midnightblue"
 
 #this function adds n (number of samples) to a boxplot
 give.n <- function(x){
-  return(c(y = median(x)*1.07, label = length(x))) 
+  return(c(y = median(x), label = length(x))) 
   # experiment with the multiplier to find the perfect position
 }
 

@@ -14,21 +14,12 @@ filterByPFT <- function(file = files[1],pft_int = 1,
   return(output)
 }
 
-filterByPFT <- function(file = files[1],pft_int = 1,
-                        map = "fates_pftmap_levscpf",
-                        var='DDBH_CANOPY_SCPF'){
-  
-  mapVector <- ncvar_get(nc_open(file),varid = map)
-  output <-  ncvar_get(nc_open(file),varid = var)[mapVector == pft_int]
-  return(output)
-}
-
 
 watts_to_MJ_per_day <- function(watts){
   return(watts * 3600 * 24 / 1e6)
 }
 
-
+#NEED TO UPDATE THIS TO INCLUDE PAR DIF AS WELL 
 #add the indirect par (by getting the weighted average)
 getPARatLowestLeafLayer <- function(file = files[1]){ #input are netcdf files with par in mean W m2-1 over history file interval
   r <- ncvar_get(nc_open(file),varid = 'PARPROF_DIR_CNLF')
@@ -80,7 +71,7 @@ getRunningMeans <- function(df, var, ema_window, ma_window, alpha = 1){
   }
   
   
-  rMean = calculateMovingWindowMean(input = pull(df,var), 
+  rMean = calculateMovingWindowMean(input = dplyr::pull(df,var), 
                                     window = ma_window)
   
   output <- df %>% mutate(ema = ema) %>% 
@@ -118,14 +109,14 @@ mdd_ema <- function(smp, mdd_window, psi_crit, alpha = 1){
 }
   
   
-  rMean = calculateMovingWindowMean(input = pull(df,var), 
-                                    window = ma_window)
-  
-  output <- df %>% mutate(ema = ema) %>% 
-    mutate(rMean = rMean) %>%
-    cbind(index = 1:nrow(df))
-  
-  return(output)
+  # rMean = calculateMovingWindowMean(input = pull(df,var), 
+  #                                   window = ma_window)
+  # 
+  # output <- df %>% mutate(ema = ema) %>% 
+  #   mutate(rMean = rMean) %>%
+  #   cbind(index = 1:nrow(df))
+  # 
+  # return(output)
 
 
 

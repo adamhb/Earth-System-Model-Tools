@@ -1,3 +1,6 @@
+#This script visualizes par at the forest floor (at the lowest canopy layer) over time.
+#The current data shows this for a bare ground start.
+
 library(ncdf4)
 library(tidyverse)
 library(lubridate)
