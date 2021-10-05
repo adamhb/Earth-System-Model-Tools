@@ -45,7 +45,7 @@ fruit_mass_df <- bci_traits %>%
   dplyr::select(sp, FRUIT_DRY, DSPR_DRY) %>%
   mutate(fruit_mass  = case_when(
     !is.na(FRUIT_DRY) ~ FRUIT_DRY, 
-    is.na(FRUIT_DRY)  ~ DSPR_DRY,
+    is.na(FRUIT_DRY)  ~ DSPR_DRY
   ))
 
 ##designate part codes for reproductive and leaf material 
@@ -84,11 +84,11 @@ R_yr_corr_temp<-
   transmute(Year, Rmass_m2_corr = map_dbl(R_yr_corr, purr_fun))
 
 L_yr_corr <- L_yr %>% 
-  mutate(Lmass_m2_corr = Lmass_m2*1.10)
+  mutate(Lmass_m2_corr = Lmass_m2*1.11)
 
 ##leaf herbivory correction source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
 ## see brr_npp_r1.txt, estsimated ~ 50g/m2yr lost to insect herbivory, ~30 g/m2yr to vert. herbiv.
-## this is proprtional to ~ 10% of the observed litterfall flux
+## this is proprtional to ~ 11% of the observed leaf litterfall flux
 
 
 ## Join 
