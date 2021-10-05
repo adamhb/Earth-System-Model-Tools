@@ -9,7 +9,6 @@ source('benchmarking/RL_functions.R')
 ##############################Ecosystem level R/L , all species###########################
 data_path <- "~/cloud/gdrive/review_paper/quant_summary_data/"
 
-#testing master2
 
 BCI_mo_RL <- read_csv("data/BCI_mo_RL.csv")
 
@@ -27,14 +26,17 @@ BCI_mo_RL %>%
 
 ############################## Canopy sp  R/L##############################################
 
-
-##load data
-canopy_sp <- read_csv("data/canopy_sp_bci.csv") %>% 
-  rename(sp = `unique(bcifull_clean$sp)`)
-
+#load species list
+canopy_sp <- read_csv("data/canopy_sp_bci.csv") %>%
+  select(sp)
+#load palm species
+palms <- read_csv("data/palms_Arecaceae.csv")
+#load bci trait data
 bci_traits <- read_csv(paste0(data_path,"BCITRAITS_20101220_updated3.21.19.csv"))
+#remove palm species from canopy species
+canopy_sp <- canopy_sp %>% filter(!sp %in% palms$sp)
 
-
+#load and clean the trap data
 trap_data <- read_csv("data/Hanbury_Brown_50ha_rawdata_20190404.csv") %>% 
   mutate(part = as_factor(part)) %>% 
   mutate(sp = tolower(sp6)) %>% 
@@ -48,7 +50,7 @@ fruit_mass_df <- bci_traits %>%
   dplyr::select(sp, FRUIT_DRY, DSPR_DRY) %>%
   mutate(fruit_mass  = case_when(
     !is.na(FRUIT_DRY) ~ FRUIT_DRY, 
-    is.na(FRUIT_DRY)  ~ DSPR_DRY,
+    is.na(FRUIT_DRY)  ~ DSPR_DRY
   ))
 
 ##designate part codes for reproductive and leaf material 
