@@ -13,5 +13,16 @@ BCI_mo_RL %>%
   ggplot() +
   geom_boxplot(aes(x = "", 
                    y = RL))+
-  xlab("BCI R/L (all species)") +
+  xlab("BCI obs. R/L (all species)") +
   adams_theme
+
+
+#calculate leaf and repro litter fluxes in g C m-2 day-1
+BCI_mo_RL %>% 
+  group_by(Year) %>% 
+  summarise(Rm2yr = sum(Rm2), 
+            Lm2yr = sum(Lm2),
+            Sm2yr = sum(Sm2)) %>% 
+  mutate_at(.vars = c("Rm2yr","Lm2yr","Sm2yr"),.funs = function(x){x / 365}) 
+
+
