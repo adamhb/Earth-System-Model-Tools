@@ -156,7 +156,7 @@ getAnnualMeanAfterSpecificYr <- function(df,var,start_date_str){
 #####Create dataframe of vdm data over time###
 ##############################################
 data_path <- '~/cloud/gdrive/FATES/FATES_data'
-case_name <- 'bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29'
+case_name <- 'bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis0.04680188'
 files <- getFilePaths(data_path,case_name)
 
 #variables of interest
