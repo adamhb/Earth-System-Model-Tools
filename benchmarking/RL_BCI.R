@@ -1,14 +1,16 @@
 
 library(tidyverse)
 library(lubridate)
+
 source('utils/figure_formatting_esm_tools.R')
 source('benchmarking/RL_functions.R')
 
+
 ##############################Ecosystem level R/L , all species###########################
+data_path <- "~/cloud/gdrive/review_paper/quant_summary_data/"
 
-data_path <- "data/"
 
-BCI_mo_RL <- read_csv(paste(data_path,"BCI_mo_RL.csv", sep = ""))
+BCI_mo_RL <- read_csv("data/BCI_mo_RL.csv")
 
 BCI_mo_RL %>% 
   group_by(Year) %>% 
@@ -26,13 +28,13 @@ BCI_mo_RL %>%
 
 
 ##load data
-canopy_sp <- read_csv(paste(data_path, "canopy_sp_bci.csv", sep = "")) %>% 
+canopy_sp <- read_csv("data/canopy_sp_bci.csv") %>% 
   rename(sp = `unique(bcifull_clean$sp)`)
 
-bci_traits <- read_csv("~/Desktop/NGEE-Tropics/BCI_data/BCITRAITS_20101220_updated3.21.19.csv") 
+bci_traits <- read_csv(paste0(data_path,"BCITRAITS_20101220_updated3.21.19.csv"))
 
 
-trap_data <- read_csv("~/Desktop/NGEE-Tropics/BCI_data/Hanbury_Brown_50ha_rawdata_20190404.csv") %>% 
+trap_data <- read_csv("data/Hanbury_Brown_50ha_rawdata_20190404.csv") %>% 
   mutate(part = as_factor(part)) %>% 
   mutate(sp = tolower(sp6)) %>% 
   mutate(Date = as.Date(fecha, format = "%Y%m%d")) %>% 
@@ -45,7 +47,7 @@ fruit_mass_df <- bci_traits %>%
   dplyr::select(sp, FRUIT_DRY, DSPR_DRY) %>%
   mutate(fruit_mass  = case_when(
     !is.na(FRUIT_DRY) ~ FRUIT_DRY, 
-    is.na(FRUIT_DRY)  ~ DSPR_DRY,
+    is.na(FRUIT_DRY)  ~ DSPR_DRY
   ))
 
 ##designate part codes for reproductive and leaf material 
@@ -64,6 +66,7 @@ R_yr <-
   group_by(Year) %>%
   nest() %>% 
   mutate(R_yr = map(data, get_part_mass_total, parts = repro_parts)) %>% 
+  ungroup() %>%
   transmute(Year, Rmass_m2 = map_dbl(R_yr, purr_fun))
 
 
@@ -72,6 +75,7 @@ L_yr <-
   group_by(Year) %>% 
   nest() %>% 
   mutate(L_yr = map(data, get_part_mass_total, parts = leaf_parts)) %>% 
+  ungroup() %>%
   transmute(Year, Lmass_m2 = map_dbl(L_yr, purr_fun))
 
 
@@ -81,6 +85,7 @@ R_yr_corr_temp<-
   group_by(Year) %>%
   nest() %>% 
   mutate(R_yr_corr = map(data, get_repro_total_m2)) %>% 
+  ungroup() %>%
   transmute(Year, Rmass_m2_corr = map_dbl(R_yr_corr, purr_fun))
 
 L_yr_corr <- L_yr %>% 
