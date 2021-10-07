@@ -1,6 +1,7 @@
 #This script calculates annual mortality rates and recruitment rates
 #in size class Z (dbh, mm)
 source('benchmarking/clean_census_data.R')
+library(lubridate)
 #constant
 m2_per_ha <- 1e4
 
@@ -36,7 +37,7 @@ getRecRate <- function(Nt0,Nt1,S_t1,M_t1){
 #for species spp
 #option to return the IDs of the alive trees
 getAliveTrees <- function(df,i,spp,output = "N"){
-  tmp <- df %>% filter(cen == i, status == "A", sp == spp, dbh < 50) #address the size class issue here?
+  tmp <- df %>% filter(cen == i, status == "A", sp == spp, dbh < 100) #address the size class issue here?
   if(output == 'N'){
     return(nrow(tmp))
   }else{
@@ -128,6 +129,7 @@ sercVitalRates <- getVitalRates(sercfull_clean,serc_size,"serc")
 
 #merge all site data into one df
 vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates,scbiVitalRates,sercVitalRates)
+
 
 write_csv(vitalRates_allSites,"data/vital_rates_all_sites.csv")
 

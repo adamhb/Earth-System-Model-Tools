@@ -1,3 +1,5 @@
+library(tidyverse)
+
 source('utils/supporting_funcs_esm_tools.R')
 source('utils/figure_formatting_esm_tools.R')
 print("Cleaning census data...")
@@ -159,8 +161,13 @@ sercFieldNames <- luqFieldNames
 ####Apply standard cleaning function to all data sets####
 #########################################################
 
-luqfull_clean <- filter_for_canopy_trees(clean_cen_data(df = luqfull_raw,from_names = luqFieldNames,site_name = "luq"))
-bcifull_clean <- filter_for_canopy_trees(clean_cen_data(df = bcifull_raw,from_names = bci_from_names,site_name = "bci"))
+#identify palm species 
+palms <- read_csv('data/palms_Arecaceae.csv')
+
+luqfull_clean <- filter_for_canopy_trees(clean_cen_data(df = luqfull_raw,from_names = luqFieldNames,site_name = "luq")) %>%
+  filter(!sp %in% palms$sp)
+bcifull_clean <- filter_for_canopy_trees(clean_cen_data(df = bcifull_raw,from_names = bci_from_names,site_name = "bci")) %>%
+  filter(!sp %in% palms$sp)
 scbifull_clean <- filter_for_canopy_trees(clean_cen_data(df = scbifull_raw,from_names = scbiFieldNames,site_name = "scbi"))
 sercfull_clean <- filter_for_canopy_trees(clean_cen_data(df = sercfull_raw,from_names = sercFieldNames,site_name = "serc"))
 

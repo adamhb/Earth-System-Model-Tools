@@ -5,6 +5,8 @@ source('utils/figure_formatting_esm_tools.R')
 source('utils/supporting_funcs_esm_tools.R')
 
 vitalRates_allSites <- read_csv("benchmarking/vital_rates_all_sites.csv")
+
+
 m2_per_ha <- 1e4
 ########################################################
 #######Plotting recruitment data########################
