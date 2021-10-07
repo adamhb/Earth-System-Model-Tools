@@ -1,6 +1,6 @@
 #This script calculates annual mortality rates and recruitment rates
 #in size class Z (dbh, mm)
-
+source('benchmarking/clean_census_data.R')
 #constant
 m2_per_ha <- 1e4
 
@@ -36,7 +36,7 @@ getRecRate <- function(Nt0,Nt1,S_t1,M_t1){
 #for species spp
 #option to return the IDs of the alive trees
 getAliveTrees <- function(df,i,spp,output = "N"){
-  tmp <- df %>% filter(cen == i, status == "A", sp == spp) #address the size class issue here?
+  tmp <- df %>% filter(cen == i, status == "A", sp == spp, dbh < 50) #address the size class issue here?
   if(output == 'N'){
     return(nrow(tmp))
   }else{
@@ -124,12 +124,29 @@ luqVitalRates <- getVitalRates(luqfull_clean,luq_size,"luq") #this could be a go
 bciVitalRates <- getVitalRates(bcifull_clean,bci_size,"bci")
 scbiVitalRates <- getVitalRates(scbifull_clean,scbi_size,"scbi") #this could be a good format to provide as a model ready data product
 sercVitalRates <- getVitalRates(sercfull_clean,serc_size,"serc")
-#could add pft info here....or further up?
+
 
 #merge all site data into one df
 vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates,scbiVitalRates,sercVitalRates)
 
-write_csv(vitalRates_allSites,"benchmarking/vital_rates_all_sites.csv")
+write_csv(vitalRates_allSites,"data/vital_rates_all_sites.csv")
+
+
+#extract data just for bci to compare to model simulations
+vitalRates_allSites %>%
+  filter(site == "bci") %>%
+  group_by(site, cen_interval) %>%
+  summarise(R_ha_yr = sum(R_t1,na.rm = T) * m2_per_ha, #the sum of all species area-based recruitment rates
+            M_ha_yr = sum(M_t1,na.rm = T) * m2_per_ha) %>% #the sum of all species area-based mortality rates
+  add_column(case = "BCI obs.", var = "RECRUITMENT") %>% #in ind. per ha per yr
+  rename(simYr = cen_interval, value = R_ha_yr) %>% select(case,simYr,var,value) %>%
+  ungroup() %>% select(case,simYr,var,value) %>%
+  write_csv(path = "data/Recruitment_BCI_obs.csv")
 
 print("created recruitment benchmarks")
+
+
+
+
+
 

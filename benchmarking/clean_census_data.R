@@ -1,4 +1,5 @@
-source('settings.R')
+source('utils/supporting_funcs_esm_tools.R')
+source('utils/figure_formatting_esm_tools.R')
 print("Cleaning census data...")
 #This script cleans census data from luquillo, BCI, SERC, and ?
 #to make it ready to calculate vital demographic rates such as recruitment

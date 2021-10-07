@@ -108,6 +108,153 @@ mdd_ema <- function(smp, mdd_window, psi_crit, alpha = 1){
   return(ema)
 }
   
+
+getSiteVar <- function(file,varName){ #input are netcdf files
+  nc <- nc_open(file)
+  r <- ncvar_get(nc,varName)
+  if(length(r) > 1){r <- sum(r)}
+  nc_close(nc)
+  return(r) #returns variable value of interest
+}
+
+
+getDateFromNC <- function(file){
+  return(ymd(getSiteVar(file,"mcdate")))
+}
+
+getSiteVarOverTime <- function(files,varName,withDate=F){ #accepts a list of netcdf output files
+  output <- c()
+  date <- c()
+  for(f in files){
+    if(withDate == T){
+      date <- append(date,getDateFromNC(f))
+    }
+    output <- append(output,getSiteVar(f,varName))
+  }
+  if(withDate == T){return(tibble(date,output))}else{
+    return(output)
+  }
+}
+
+getYrFromDate <- function(date){
+  as.numeric(substr(date,1,4))
+}
+
+getSimYrFromDate <- function(date,start_date){
+  getYrFromDate(date) - getYrFromDate(start_date) + 1
+}
+
+
+
+
+getManySiteVarsOverTime <- function(files,varNames){
+  output <- matrix(nrow = length(files),ncol = length(varNames))
+  c <- 0
+  
+  for(v in varNames){
+    c <- c + 1
+    output[,c] <- getSiteVarOverTime(files,v,F)
+    print(paste("Done with variable",v,"of",length(varNames),"variables!"))
+  }
+  colnames(output) <- varNames
+  
+  dates <- c()
+  for(f in files){
+    datef <- getDateFromNC(f)
+    dates <- append(dates,datef)
+  }
+  
+  #add the date to the data
+  output <- as_tibble(output) %>% add_column(date = dates)
+  #add the simulation year to the data
+  start_date <- output$date[1]
+  output <- output %>% mutate(simYr = getSimYrFromDate(date,start_date))
+  return(output)
+}
+
+plotVar <- function(d,x,y){
+  p <- ggplot(data = d, mapping = aes_string(x,y)) +
+    geom_point() +
+    labs(title = case_alias)
+    theme_minimal() +
+    adams_theme
+  return(p)
+}
+
+
+toLongForm <- function(d,vars){
+  gather(data = d,as.name(head(vars,1)):as.name(tail(vars,1)),
+         key = "var",value = "value")
+}
+
+toWideForm <- function(d,var_names_col,value_col){
+  wide <- pivot_wider(data = d, 
+                      names_from = as.name(var_names_col), 
+                      values_from = as.name(value_col))
+  return(wide)
+}
+
+
+plotGridofVars <- function(d,y_vars,x_var,y_axis_units,prettyNames){
+  p <- d %>% select(date,simYr,y_vars) %>%
+    toLongForm(y_vars) %>% 
+    left_join(prettyNames,by = "var") %>%
+    ggplot(aes_string(x_var,"value")) +
+    geom_point() +
+    theme_minimal() +
+    facet_wrap(~prettyName,scales = "free") +
+    ylab(y_axis_units) +
+    xlab("SimYear") +
+    labs(title = case_alias) +
+    scale_x_date(date_labels = "%y", date_breaks = "5 years") +
+    adams_theme
+  return(p)
+}
+
+#this function receives a dataframe of variables (as columns)
+#and standardizes their units based on a "variable unit map" (see script 'FATES_variable_units_map.R')
+#It returns the dataframe with all variables in standard units (g m-2 day-1)
+
+standardize_units <- function(d,vars,unit_map){
+  
+  
+  
+  output <- toLongForm(d,vars) %>%
+    left_join(unit_map, by = "var") %>%
+    mutate(std_mass = case_when(
+      (value != 0 & grepl(' kg ',units)) ~ value*g_per_kg,
+      TRUE ~ value
+    )) %>%
+    mutate(std_area = case_when(
+      (value != 0 & grepl(' ha-1 ',units)) ~ std_mass*has_per_m2,
+      TRUE ~ std_mass
+    )) %>%
+    mutate(std_time = case_when(
+      (value != 0 & grepl(' yr-1 ',units)) ~ std_area*yrs_per_day,
+      (value != 0 & grepl(' s-1 ',units)) ~ std_area*sec_per_day,
+      TRUE ~ std_area
+    )) %>%
+    mutate(value = std_time) %>%
+    select(simYr,date,var,value) 
+  return(toWideForm(output,"var","value"))
+}
+
+#this function receives aata frame and returns the mean value of a variable 
+#for each year of the data set
+#NOTE: could add standard deviation to this
+getAnnualMeanAfterSpecificYr <- function(df,var,start_date_str){
+  df %>% filter(date > as.Date(start_date_str)) %>%
+    select(simYr,date,as.name(var)) %>%
+    toLongForm(vars = var) %>% 
+    group_by(simYr) %>%
+    summarise("value" = mean(value))
+}
+
+
+
+
+
+
   
   # rMean = calculateMovingWindowMean(input = pull(df,var), 
   #                                   window = ma_window)

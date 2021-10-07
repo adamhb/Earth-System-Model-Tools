@@ -1,0 +1,26 @@
+---
+title: "Git creds"
+author: "AHB"
+date: "8/31/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("gitcreds")
+```
+
+```{r}
+library(gitcreds)
+```
+
+```{r}
+gitcreds_set(url = "https://github.com/adamhb")
+gitcreds_get(use_cache = FALSE, url = "https://github.com/adamhb")
+#to see token: 
+gitcreds_get(use_cache = FALSE)$password
+```
+

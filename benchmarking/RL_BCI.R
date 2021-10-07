@@ -110,8 +110,16 @@ RL_df <- R_yr_corr %>%
   select(Year, RL, RL_corr) %>% 
   pivot_longer(cols = c(RL, RL_corr), names_to = "Type", values_to = "RL") 
 
+#write observations to a csv
+RL_df %>% filter(Type == "RL_corr") %>% 
+  add_column(case = "BCI obs.", var = "RoL") %>% 
+  rename(simYr = Year, value = RL) %>% select(case,simYr,var,value) %>%
+  ungroup() %>%
+  write_csv(path = "data/RoverL_BCI_obs.csv")
 
-## Plot
+
+
+## Plot the observations
 RL_df %>% 
   ggplot() +
   geom_boxplot(aes(x = Type,

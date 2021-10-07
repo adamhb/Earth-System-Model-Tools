@@ -253,6 +253,10 @@ RoLandRoNPP_df <- VDM_data %>% filter(date > as.Date("1907-01-01")) %>%
   group_by(simYr,var) %>%
   summarise(value = mean(value), n = length(value))
 
+#export the model data
+write_csv(RoLandRoNPP_df,"data/RoverL&RoverANPP_model.csv")
+
+#plot the model predictions
 RoL_and_RoNPP_plot <- RoLandRoNPP_df %>%
   ggplot(aes(var,value)) +
   facet_wrap(~var,scales = "free") +
@@ -261,6 +265,10 @@ RoL_and_RoNPP_plot <- RoLandRoNPP_df %>%
   adams_theme
 
 makePNG(RoL_and_RoNPP_plot,'figures/',"RoL&RoNPP")
+
+
+
+
 
 
 #SCRATCH

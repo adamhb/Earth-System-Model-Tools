@@ -7,6 +7,19 @@ m2_per_ha <- 1e4
 sec_per_day <- 60*60*24   
 
 
+#Units map of the units of each variable
+varUnitsMapFates <- tibble(
+  var = c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','AGB','RECRUITMENT','PFTbiomass','PFTnindivs','PFTnpp','NPP_FNRT_SCPF', 'NPP_BGSW_SCPF','NPP_BGDW_SCPF'),
+  units = c(' kg ha-1 d-1 ',' g m-2 s-1 ',' g m-2 s-1 ',' g m-2 ',' indiv ha-1 yr-1 ',' g m-2 ',' indiv m-2 ',' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ')
+)
+
+FatesPrettyNamesMap <- tibble(
+  var = c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','AGB','RECRUITMENT','PFTbiomass','PFTnindivs','PFTnpp','ANPP'),
+  prettyName = c('ReproCFlux','LeafCFlux','NPP','AGB','Recruits','PFTbiomass','PFT_N','PFT_NPP','ANPP')
+)
+
+
+
 pft_names <- c("LD_DI", "LD_DT", "ST_DI", "ST_DT")
 path_to_figures <- "figures/"
 
