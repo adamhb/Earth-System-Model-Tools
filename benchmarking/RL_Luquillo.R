@@ -44,7 +44,8 @@ CTE_control <- CTE %>%
   group_by(Year = year(Yr_mo)) %>%  # sum over year
   summarise(Lgm2yr = sum(Lgm2mo, na.rm = T),
             Rgm2yr = sum(Rgm2mo, na.rm = T)) %>% 
-  mutate(RL = Rgm2yr/Lgm2yr)
+  mutate(RL = Rgm2yr/Lgm2yr) %>% 
+  filter(Year>2002) # filter for only full years of data
   
 
 
