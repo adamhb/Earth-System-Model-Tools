@@ -16,10 +16,10 @@ source('generalFunctions.R')
 #set path to the VDM output files
 data_path <- '~/cloud/gdrive/FATES/FATES_data'
 #case_name <- 'bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis0.079'
-case_name <- 'bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis0.009'
+case_name <- 'bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis0.149'
 
 #case_alias <- "Ris0.079"
-case_alias <- "Ris0.009"
+case_alias <- "Ris0.149"
 files <- getFilePaths(data_path,case_name)
 
 
