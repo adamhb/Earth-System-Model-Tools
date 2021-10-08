@@ -17,7 +17,7 @@ trap_size_m2 <- 1.75^2# 1.75 m X 1.75 m baskets
 
 CTE <- read_csv("data/CTE_clean.csv")
 
-# Adding treatment information
+# Adding treatment information, source: https://luq.lter.network/data/luqmetadata162
 
 bA<- c("Control", "Trim&clear", "Trim+debris", "NoTrim+debris")
 bB<- c("Control", "Trim+debris", "NoTrim+debris", "Trim&clear")
@@ -56,7 +56,7 @@ CTE_control %>%
   ungroup() %>%
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
-  
+#plot 
   CTE_control %>% 
     filter(Year > 2002)%>% # full years 
   ggplot() +
