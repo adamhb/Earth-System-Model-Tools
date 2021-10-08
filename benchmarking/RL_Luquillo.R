@@ -46,13 +46,23 @@ CTE_control <- CTE %>%
             Rgm2yr = sum(Rgm2mo, na.rm = T)) %>% 
   mutate(RL = Rgm2yr/Lgm2yr)
   
+
+
+#write observations to a csv
+CTE_control %>% 
+  add_column(case = "Luquillo obs.", var = "RoL") %>% 
+  rename(simYr = Year, value = RL) %>% 
+  select(case,simYr,var,value) %>%
+  ungroup() %>%
+  write_csv(file = "data/RoverL_Luquillo_obs.csv")
+
   
   CTE_control %>% 
     filter(Year > 2002)%>% # full years 
   ggplot() +
   geom_boxplot(aes(x = "", 
                    y = RL)) +
-  xlab("R/L") +
+  xlab("Luquillo") +
   ggtitle("Control plots of CTE, El Verde, Luquillo (2003-2019)") +
   adams_theme
   
