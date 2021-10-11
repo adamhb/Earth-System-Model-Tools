@@ -89,8 +89,8 @@ Y5 %>%
 
 
 # write observations to a csv
-# Y5 %>% 
-#   filter(Type == "RL_corr") %>% 
+# Y5 %>%
+#   filter(Type == "RL_corr") %>%
 #   add_column(case = "BCI obs.", var = "RoL") %>%
 #   rename(simYr = Year, value = Value) %>% select(case,simYr,var,value) %>%
 #   ungroup() %>%
