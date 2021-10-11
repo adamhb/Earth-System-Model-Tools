@@ -24,15 +24,14 @@ BCI_mo_RL %>%
   xlab("BCI obs. R/L (all species)") +
   adams_theme
 
-############################## Canopy sp  R/L##############################################
+############################## Canopy sp  R/L ##############################################
 
-#load species list
+# load species list
 canopy_sp <- read_csv("data/canopy_sp_bci.csv") %>%
   select(sp)
 #load palm species
 palms <- read_csv("data/palms_Arecaceae.csv")
-#load bci trait data
-bci_traits <- read_csv(paste0(data_path,"BCITRAITS_20101220_updated3.21.19.csv"))
+
 #remove palm species from canopy species
 canopy_sp <- canopy_sp %>% filter(!sp %in% palms$sp)
 
@@ -45,87 +44,57 @@ trap_data <- read_csv("data/Hanbury_Brown_50ha_rawdata_20190404.csv") %>%
   filter(sp %in% canopy_sp$sp) %>% # filter for only canopy sp
   filter(Year>2013 & Year < 2019) ## full years of data
 
-fruit_mass_df <- bci_traits %>% 
-  mutate(sp = tolower(`SP$`)) %>% 
-  dplyr::select(sp, FRUIT_DRY, DSPR_DRY) %>%
-  mutate(fruit_mass  = case_when(
-    !is.na(FRUIT_DRY) ~ FRUIT_DRY, 
-    is.na(FRUIT_DRY)  ~ DSPR_DRY
-  ))
-
-##designate part codes for reproductive and leaf material 
-repro_parts <- c(0:10) #part 10 is not in metadtaa seed rain file but from pers. communication with Joe Wright, represents damaged fruit
-leaf_parts <- 11
-#################
-
-##helper function to use with purr library functions 
-purr_fun <- function(yrdata){
-  yrdata$mass_m2_total
-} 
-
-## RL for canopy species with no herbivory correction 
-R_yr <- 
-  trap_data %>% 
-  group_by(Year) %>%
-  nest() %>% 
-  mutate(R_yr = map(data, get_part_mass_total, parts = repro_parts)) %>% 
-  ungroup() %>%
-  transmute(Year, Rmass_m2 = map_dbl(R_yr, purr_fun))
 
 
-L_yr <- 
-  trap_data %>% 
+# nest data by species, Year
+Year_sp_dat <- trap_data %>% 
+  mutate(sp2 = sp) %>% # create another sp var to use so that sp col stays in nested data
+  group_by(Year, sp2) %>% 
+  nest()
+
+# map function to find repro, leaf, and corrected repro mass
+Y2 <- Year_sp_dat %>% 
+  mutate(sp_tib = map(data, get_RL_df, fruit_traits = fruit_traits, use_best_est = F)) 
+
+# unnest
+Y3 <- Y2 %>% 
+  select(Year, sp_tib) %>% 
+  unnest(cols = c(sp_tib)) %>%
+  ungroup() 
+
+# summarise over species
+Y4 <- Y3 %>%
+  rowwise() %>%
+  mutate(Repro_c = ifelse(is.na(all_R_corr), all_R, all_R_corr)) %>% #if no R corrrection, use "all_R"
   group_by(Year) %>% 
-  nest() %>% 
-  mutate(L_yr = map(data, get_part_mass_total, parts = leaf_parts)) %>% 
-  ungroup() %>%
-  transmute(Year, Lmass_m2 = map_dbl(L_yr, purr_fun))
+  summarise(Leaf = sum(all_L, na.rm =T),
+            Repro_corr = sum(Repro_c, na.rm = T),
+            Repro = sum(all_R, na.rm = T)) %>% 
+  mutate(L_corr =round(Leaf*1.11, 1)) %>% 
+  ##leaf herbivory correction source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
+  ## see brr_npp_r1.txt, estsimated ~ 50g/m2yr lost to insect herbivory, ~30 g/m2yr to vert. herbiv.
+  ## this is proprtional to ~ 11% of the observed litterfall flux
+  mutate(RL_corr = Repro_corr / L_corr,
+         RL_no_corr = Repro/Leaf)
 
 
-## RL for canopy species with herbivory correction 
-R_yr_corr_temp<- 
-  trap_data %>% 
-  group_by(Year) %>%
-  nest() %>% 
-  mutate(R_yr_corr = map(data, get_repro_total_m2)) %>% 
-  ungroup() %>%
-  transmute(Year, Rmass_m2_corr = map_dbl(R_yr_corr, purr_fun))
+Y5 <- Y4 %>% 
+  pivot_longer(cols = c(RL_corr, RL_no_corr), names_to = "Type", values_to = "Value")
 
-L_yr_corr <- L_yr %>% 
-  mutate(Lmass_m2_corr = Lmass_m2*1.10)
-
-##leaf herbivory correction source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
-## see brr_npp_r1.txt, estsimated ~ 50g/m2yr lost to insect herbivory, ~30 g/m2yr to vert. herbiv.
-## this is proprtional to ~ 10% of the observed litterfall flux
+Y5 %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Type, 
+                   y = Value, 
+                   group = Type)) 
 
 
-## Join 
-R_yr_corr <- R_yr %>%
-  left_join(R_yr_corr_temp)
-
-RL_df <- R_yr_corr %>% 
-  left_join(L_yr_corr) %>% 
-  mutate(RL = Rmass_m2 / Lmass_m2 ) %>% 
-  mutate(RL_corr = Rmass_m2_corr / Lmass_m2_corr) %>% 
-  select(Year, RL, RL_corr) %>% 
-  pivot_longer(cols = c(RL, RL_corr), names_to = "Type", values_to = "RL") 
-
-#write observations to a csv
-RL_df %>% filter(Type == "RL_corr") %>% 
-  add_column(case = "BCI obs.", var = "RoL") %>% 
-  rename(simYr = Year, value = RL) %>% select(case,simYr,var,value) %>%
-  ungroup() %>%
-  write_csv(path = "data/RoverL_BCI_obs.csv")
-
-
-
-## Plot the observations
-RL_df %>% 
-  ggplot() +
-  geom_boxplot(aes(x = Type,
-                   y = RL)) +
-  adams_theme 
-
-
+# write observations to a csv
+# Y5 %>% 
+#   filter(Type == "RL_corr") %>% 
+#   add_column(case = "BCI obs.", var = "RoL") %>%
+#   rename(simYr = Year, value = Value) %>% select(case,simYr,var,value) %>%
+#   ungroup() %>%
+#   write_csv(path = "data/RoverL_BCI_obs.csv")
+  
 
 
