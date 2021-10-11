@@ -76,12 +76,12 @@ get_fr_from_cap <- function(data, n_seeds, mf_mass){
 
 
 get_RL_df <- function(data, fruit_traits, use_best_est = T){
-  # data = for a single species (nested or filetered), cols = sp, part, quantity, mass
+  # data = for a single species (nested or filtered), cols = sp, part, quantity, mass
   # fruit traits = from BCI traits, cols = FRUIT_DRY, DSP_DRY, N_SEEDFUL, DRY_MASS
-  # use_best_est = logical, if T will use bci trait values and get_best_est() function described about,
-  # if F will use get_mass() function
+  # use_best_est = logical, if T will use bci trait values and get_best_est() function described above,
+  # if F will use get_mass() function rather than get_best_est()
   
-  repro_parts = c(0:10) # corresponds to cateogories listed in medata for BCI seed rain 
+  repro_parts = c(0:10) # corresponds to cateogories listed in metadata for BCI seed rain 
   sp <- data$sp[1]      
   if(length(unique(data$sp)) > 1){
     stop("data must be observations for 1 species only")
@@ -107,7 +107,7 @@ get_RL_df <- function(data, fruit_traits, use_best_est = T){
     if(!is.na(mf_mass) & !is.na(n_seeds)){
       
       est_mfm_caps <- get_fr_from_cap(data, n_seeds = n_seeds, mf_mass = mf_mass)
-      dsp <-  NA # dsp counts are incoporated into estimate from capsules 
+      dsp <-  NA # dsp counts are incoporated into estimate from capsules, fragments 
       
       if(use_best_est == T){
         mfm <- get_best_est(data, parts = c(1, 7, 10), est = mf_mass)
