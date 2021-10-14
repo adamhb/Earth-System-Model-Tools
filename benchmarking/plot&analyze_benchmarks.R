@@ -4,8 +4,9 @@ library(tidyverse)
 source('utils/figure_formatting_esm_tools.R')
 source('utils/supporting_funcs_esm_tools.R')
 
-vitalRates_allSites <- read_csv("benchmarking/vital_rates_all_sites.csv")
+vitalRates_allSites <- read_csv("data/vital_rates_all_sites.csv")
 
+str(vitalRates_allSites)
 
 m2_per_ha <- 1e4
 ########################################################

@@ -29,7 +29,7 @@ rec.y.axis <- ylab(expression(paste('N recruits [ha'^'-1','yr'^'-1',"]")))
 #set theme for the plots
 adams_theme <- theme(plot.title = element_text(hjust = 0.5, size = title_size),
                      strip.text.x = element_text(size = axis_size),
-                     legend.title = element_blank (),
+                    # legend.title = element_blank (),
                      axis.title.x = element_text (size = axis_size), # change the axis title
                      axis.title.y = element_text (size = axis_size),
                      axis.title.y.right = element_text (size = axis_size, color = pft.cols[2]),

@@ -50,12 +50,12 @@ CTE_control <- CTE %>%
 
 
 #write observations to a csv
-CTE_control %>% 
-  add_column(case = "Luquillo obs.", var = "RoL") %>% 
-  rename(simYr = Year, value = RL) %>% 
-  select(case,simYr,var,value) %>%
-  ungroup() %>%
-  write_csv(file = "data/RoverL_Luquillo_obs.csv")
+# CTE_control %>% 
+#   add_column(case = "Luquillo obs.", var = "RoL") %>% 
+#   rename(simYr = Year, value = RL) %>% 
+#   select(case,simYr,var,value) %>%
+#   ungroup() %>%
+  #write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
 #plot 
   CTE_control %>% 

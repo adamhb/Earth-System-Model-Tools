@@ -132,6 +132,7 @@ vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates,scbiVitalRates,sercVita
 
 
 write_csv(vitalRates_allSites,"data/vital_rates_all_sites.csv")
+write_csv(vitalRates_allSites,"data/Table_S4.csv")
 
 
 #extract data just for bci to compare to model simulations
