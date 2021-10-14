@@ -44,7 +44,9 @@ trap_data <- read_csv("data/Hanbury_Brown_50ha_rawdata_20190404.csv") %>%
   filter(sp %in% canopy_sp$sp) %>% # filter for only canopy sp
   filter(Year>2013 & Year < 2019) ## full years of data
 
-
+# save n traps, trap area to later scale to g/m2
+ntraps = n_distinct(trap_data$trap)
+trap_size = 0.5 #units = m2
 
 # nest data by species, Year
 Year_sp_dat <- trap_data %>% 
@@ -62,18 +64,17 @@ Y3 <- Y2 %>%
   unnest(cols = c(sp_tib)) %>%
   ungroup() 
 
-# summarise over species
+# summarise over species, convert g/year --> g/m2year
+# 64 traps, each 0.5 m2
 Y4 <- Y3 %>%
   rowwise() %>%
   mutate(Repro_c = ifelse(is.na(all_R_corr), all_R, all_R_corr)) %>% #if no R corrrection, use "all_R"
   group_by(Year) %>% 
-  summarise(Leaf = sum(all_L, na.rm =T),
-            Repro_corr = sum(Repro_c, na.rm = T),
-            Repro = sum(all_R, na.rm = T)) %>% 
-  mutate(L_corr =round(Leaf*1.11, 1)) %>% 
-  ##leaf herbivory correction source: https://daac.ornl.gov/NPP/guides/NPP_BRR.html
-  ## see brr_npp_r1.txt, estsimated ~ 50g/m2yr lost to insect herbivory, ~30 g/m2yr to vert. herbiv.
-  ## this is proprtional to ~ 11% of the observed litterfall flux
+  summarise(Leaf = sum(all_L, na.rm =T)/(trap_size * n_traps),  #
+            Repro_corr = sum(Repro_c, na.rm = T)/(trap_size * n_traps),
+            Repro = sum(all_R, na.rm = T)/(trap_size * n_traps)) %>% 
+  mutate(L_corr =round(Leaf*1.097, 1)) %>% 
+  ##leaf herbivory correction source: pers. communication with Joe Wright, Oct 13, 2021
   mutate(RL_corr = Repro_corr / L_corr,
          RL_no_corr = Repro/Leaf)
 
@@ -87,14 +88,25 @@ Y5 %>%
                    y = Value, 
                    group = Type)) 
 
+# observations for R g/m2yr to a csv
+Rdf <- Y5 %>% 
+  filter(Type == "RL_corr") %>% 
+  add_column(case = "BCI obs.", var = "Rgm2yr") %>% 
+  rename(simYr = Year, value = Repro_corr) %>% 
+  select(case, simYr, var, value)
 
-# write observations to a csv
-# Y5 %>%
-#   filter(Type == "RL_corr") %>%
-#   add_column(case = "BCI obs.", var = "RoL") %>%
-#   rename(simYr = Year, value = Value) %>% select(case,simYr,var,value) %>%
-#   ungroup() %>%
-#   write_csv(path = "data/RoverL_BCI_obs.csv")
+
+# write observations for R g/m2yr and R/L to a csv
+Y5 %>%
+  filter(Type == "RL_corr") %>%
+  add_column(case = "BCI obs.", var = "RoL") %>%
+  rename(simYr = Year, value = Value) %>% 
+  select(case,simYr,var,value) %>%
+  ungroup() %>%
+  bind_rows(Rdf) %>%
+  write_csv(path = "data/RoverL_BCI_obs.csv")
   
 
 
+
+            
