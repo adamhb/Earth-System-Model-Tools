@@ -1,0 +1,104 @@
+plot.ID,sites.sitename,plot.name,stand.age,R_method,R_flux,L_method,L_flux,NPP_method,NPP_flux,RL,RNPP,L_flux_C,NPP_flux_C
+71,Amacayacu E,old-growth tropical forest.AGP1,999,ANPP_repro_OM,0.39,ANPP_foliage_OM,6.45,NA,NA,0.06046511627906977,NA,3.225,NA
+72,Amacayacu U,old-growth tropical forest.AGP2,999,ANPP_repro_OM,0.63,ANPP_foliage_OM,5.78,NA,NA,0.10899653979238753,NA,2.89,NA
+97,"Apiau,Roraima",old-growth tropical forest.APR,999,ANPP_repro_OM,0.28,ANPP_foliage_OM,5.57,NA,NA,0.05026929982046679,NA,2.785,NA
+187,BCI.poachers1,old-growth tropical forest.BCI1,999,ANPP_repro_OM,0.76,ANPP_foliage_OM,7.53,NA,NA,0.10092961487383798,NA,3.765,NA
+188,BCI.poachers2,old-growth tropical forest.BCI2,999,ANPP_repro_OM,1.63,ANPP_foliage_OM,7.69,NA,NA,0.211963589076723,NA,3.845,NA
+189,BCI.poachers3,old-growth tropical forest.BCI3,999,ANPP_repro_OM,1.02,ANPP_foliage_OM,7.14,NA,NA,0.14285714285714288,NA,3.57,NA
+190,BCI.poachers4,old-growth tropical forest.BCI4,999,ANPP_repro_OM,1.02,ANPP_foliage_OM,6.87,NA,NA,0.14847161572052403,NA,3.435,NA
+228,BDFFP Reserve,old-growth tropical forest.BDF1,999,ANPP_repro_OM,0.6,ANPP_foliage_OM,6.63,NA,NA,0.09049773755656108,NA,3.315,NA
+229,BDFFP Reserve,secondary tropical forest.BDF2,NAC,ANPP_repro_OM,0.63,ANPP_foliage_OM,7.05,NA,NA,0.08936170212765958,NA,3.525,NA
+348,Brasschaat Oak,Managed,77,ANPP_repro_C,0.6,ANPP_foliage_C,4.4,NA,NA,0.13636363636363635,NA,4.4,NA
+349,Brasschaat Pine,Managed,77,ANPP_repro_C,1.5,ANPP_foliage_C,2.2,NA,NA,0.6818181818181818,NA,2.2,NA
+382,Cajunuma,UM,999,ANPP_repro_C,0.03,ANPP_foliage_C,0.92,NPP_3_C,6.56,0.03260869565217391,0.004573170731707317,0.92,6.56
+416,Cardoso Island,old-growth tropical forest.CAR1,999,ANPP_repro_OM,0.8,ANPP_foliage_OM,4.42,NA,NA,0.1809954751131222,NA,2.21,NA
+415,Cardoso Island restinga,short-statured tropical forest.CAR2,NI,ANPP_repro_OM,0.25,ANPP_foliage_OM,2.92,NA,NA,0.08561643835616438,NA,1.46,NA
+438,Caxiuana Terra Preta CAX-08,UM Late successional forest,999,ANPP_repro_OM,1.2,ANPP_foliage_OM,6.85,NA,NA,0.17518248175182483,NA,3.425,NA
+439,Caxiuana Tower CAX-06,tall primary forest near flux tower site,999,ANPP_repro_OM,0.94,ANPP_foliage_C,3.68,NA,NA,0.2554347826086956,NA,3.68,NA
+439,Caxiuana Tower CAX-06,tall primary forest near flux tower site,999,ANPP_repro_OM,0.94,ANPP_foliage_OM,5.65,NA,NA,0.16637168141592917,NA,2.825,NA
+530,"Chiribiquete, Tepuy",short-statured tropical forest.CHI1,NI,ANPP_repro_OM,0.3,ANPP_foliage_OM,3.29,NA,NA,0.0911854103343465,NA,1.645,NA
+531,"Chiribiquete,TF Alta",old-growth tropical forest.CHI2,999,ANPP_repro_OM,0.84,ANPP_foliage_OM,4.7,NA,NA,0.17872340425531913,NA,2.35,NA
+552,Cordillera Central 2550ma.s.l.,montane tropical forest.COC1,NAC,ANPP_repro_OM,0.66,ANPP_foliage_OM,4.61,NA,NA,0.14316702819956617,NA,2.305,NA
+553,Cordillera Central 3370ma.s.l.,montane tropical forest.COC2,NAC,ANPP_repro_OM,0.27,ANPP_foliage_OM,2.82,NA,NA,0.09574468085106384,NA,1.41,NA
+564,Cuieiras Reserve Plateau CUR1,old-growth tropical forest.CUR1,999,ANPP_repro_OM,0.42,ANPP_foliage_OM,5.42,NA,NA,0.07749077490774907,NA,2.71,NA
+565,Cuieiras Reserve Plateau CUR3,old-growth tropical forest.CUR3,999,ANPP_repro_OM,1.36,ANPP_foliage_OM,6.94,NA,NA,0.19596541786743515,NA,3.47,NA
+566,Cuieiras Reserve Slope CUR4,old-growth tropical forest.CUR4,999,ANPP_repro_OM,0.35,ANPP_foliage_OM,6.16,NA,NA,0.056818181818181816,NA,3.08,NA
+567,Cuieiras Reserve Valley CUR2,partially flooded tropical forest.CUR2,NAC,ANPP_repro_OM,0.43,ANPP_foliage_OM,4.69,NA,NA,0.09168443496801705,NA,2.345,NA
+949,Guyaflux,UM,999,ANPP_repro_C,0.35,ANPP_foliage_C,2.97,NA,NA,0.11784511784511784,NA,2.97,NA
+1094,"Jari, Para secondary",secondary tropical forest.JAR2,NI,ANPP_repro_OM,0.48,ANPP_foliage_OM,6.92,NA,NA,0.06936416184971098,NA,3.46,NA
+1095,"Jari,Para primary",old-growth tropical forest.JAR1,999,ANPP_repro_OM,1.16,ANPP_foliage_OM,7.84,NA,NA,0.14795918367346939,NA,3.92,NA
+1153,Kannenbruch Alder/Ash,Managed,65,ANPP_repro_C,0.06,ANPP_foliage_C,1.69,NPP_3_C,6.72,0.03550295857988166,0.008928571428571428,1.69,6.72
+1154,Kannenbruch Beech,Managed,111,ANPP_repro_C,0.51,ANPP_foliage_C,1.3,NPP_3_C,6.75,0.3923076923076923,0.07555555555555556,1.3,6.75
+1155,Kannenbruch Oak,Managed,207,ANPP_repro_C,0.93,ANPP_foliage_C,1.84,NPP_3_C,10.35,0.5054347826086957,0.08985507246376813,1.84,10.35
+1264,La Sabanita low forest (SB3),short-statured tropical forest.YUR3,NI,ANPP_repro_OM,0.39,ANPP_foliage_OM,4.22,NA,NA,0.09241706161137442,NA,2.11,NA
+1265,La Sabanita medium forest (SMA5),secondary tropical forest.YUR2,50,ANPP_repro_OM,0.21,ANPP_foliage_OM,3.99,NA,NA,0.05263157894736842,NA,1.995,NA
+1266,La Sabanita tall forest (SA1),old-growth tropical forest.YUR1,999,ANPP_repro_OM,0.54,ANPP_foliage_OM,4.76,NA,NA,0.11344537815126052,NA,2.38,NA
+1502,Manaus Floresta,old-growth tropical forest.MAN1,999,ANPP_repro_OM,0.46,ANPP_foliage_OM,6.03,NA,NA,0.07628524046434494,NA,3.015,NA
+1503,Manaus Secondary,secondary tropical forest.MAN2,NAC,ANPP_repro_OM,0.31,ANPP_foliage_OM,6.09,NA,NA,0.05090311986863711,NA,3.045,NA
+1541,Maraca Island,natural regeneration of sandy lowland evergreen rainforest,NAC,ANPP_repro_OM,1.21,ANPP_foliage_OM,6.3,NA,NA,0.19206349206349208,NA,3.15,NA
+1538,"Maraca Island,Forest without Peltogyne",partially flooded tropical forest.MAI3,NAC,ANPP_repro_OM,0.93,ANPP_foliage_OM,5.92,NA,NA,0.1570945945945946,NA,2.96,NA
+1539,"Maraca Island,Peltogyne poor forest",partially flooded tropical forest.MAI2,NAC,ANPP_repro_OM,0.92,ANPP_foliage_OM,6.02,NA,NA,0.15282392026578076,NA,3.01,NA
+1540,"Maraca Island,Peltogyne-rich forest",partially flooded tropical forest.MAI1,NAC,ANPP_repro_OM,0.71,ANPP_foliage_OM,5.44,NA,NA,0.13051470588235292,NA,2.72,NA
+1543,Mata de Piedade,old-growth tropical forest.MDP1,999,ANPP_repro_OM,0.32,ANPP_foliage_OM,8.55,NA,NA,0.03742690058479532,NA,4.275,NA
+1544,Mata de Piedade,secondary tropical forest.MDP2,NI,ANPP_repro_OM,0.75,ANPP_foliage_OM,11.01,NA,NA,0.0681198910081744,NA,5.505,NA
+1554,Medio Rio Caqueta 1,partially flooded tropical forest.MRC1,NAC,ANPP_repro_OM,0.15,ANPP_foliage_OM,7.1,NA,NA,0.02112676056338028,NA,3.55,NA
+1555,Medio Rio Caqueta 2,old-growth tropical forest.MRC2,999,ANPP_repro_OM,0.05,ANPP_foliage_OM,6.1,NA,NA,0.00819672131147541,NA,3.05,NA
+1556,Medio Rio Caqueta 3,old-growth tropical forest.MRC3,999,ANPP_repro_OM,0.47,ANPP_foliage_OM,6.77,NA,NA,0.06942392909896603,NA,3.385,NA
+1557,Medio Rio Caqueta 4,old-growth tropical forest.MRC4,999,ANPP_repro_OM,0.33,ANPP_foliage_OM,5.4,NA,NA,0.06111111111111111,NA,2.7,NA
+1558,Medio Rio Caqueta 5,old-growth tropical forest.MRC5,999,ANPP_repro_OM,0.19,ANPP_foliage_OM,5.36,NA,NA,0.03544776119402985,NA,2.68,NA
+1611,Morgan Monroe State Forest (MMSF),Managed,70,ANPP_repro_C,0.14,ANPP_foliage_C,2.13,NPP_3_C,9.52,0.06572769953051644,0.014705882352941178,2.13,9.52
+1611,Morgan Monroe State Forest (MMSF),Managed,70,ANPP_repro_C,0.14,ANPP_foliage_C,2.13,NPP_4_C,9.66,0.06572769953051644,0.014492753623188408,2.13,9.66
+1611,Morgan Monroe State Forest (MMSF),Managed,70,ANPP_repro_C,0.14,ANPP_foliage_C,1.98,NPP_3_C,9.52,0.07070707070707072,0.014705882352941178,1.98,9.52
+1611,Morgan Monroe State Forest (MMSF),Managed,70,ANPP_repro_C,0.14,ANPP_foliage_C,1.98,NPP_4_C,9.66,0.07070707070707072,0.014492753623188408,1.98,9.66
+1611,Morgan Monroe State Forest (MMSF),Managed,71,ANPP_repro_C,0.15,ANPP_foliage_C,2.1,NPP_3_C,9.66,0.07142857142857142,0.015527950310559006,2.1,9.66
+1611,Morgan Monroe State Forest (MMSF),Managed,71,ANPP_repro_C,0.15,ANPP_foliage_C,2.1,NPP_4_C,9.8,0.07142857142857142,0.01530612244897959,2.1,9.8
+1704,Nouragues Grand Plateau,old-growth tropical forest.NOR2,999,ANPP_repro_OM,0.82,ANPP_foliage_OM,6.75,NA,NA,0.12148148148148147,NA,3.375,NA
+1706,Nouragues Petit Plateau,old-growth tropical forest.NOR1,999,ANPP_repro_OM,0.67,ANPP_foliage_OM,5.94,NA,NA,0.1127946127946128,NA,2.97,NA
+1708,Nova Xavantina cerrado,short-statured tropical forest.NXA1,NI,ANPP_repro_OM,0.17,ANPP_foliage_OM,0.49,NA,NA,0.34693877551020413,NA,0.245,NA
+1709,Nova Xavantina cerrado,short-statured tropical forest.NXA2,NI,ANPP_repro_OM,0.24,ANPP_foliage_OM,0.27,NA,NA,0.8888888888888888,NA,0.135,NA
+1793,Panama Transect 1.Parque Metropolitano,old-growth tropical forest.PRT1,999,ANPP_repro_OM,0.94,ANPP_foliage_OM,9.47,NA,NA,0.09926082365364307,NA,4.735,NA
+1794,Panama Transect 2.Pipeline Road.Soberania National Park,old-growth tropical forest.PRT2,999,ANPP_repro_OM,1.4,ANPP_foliage_OM,6.33,NA,NA,0.22116903633491308,NA,3.165,NA
+1795,Panama Transect 3.Fort Sherman,old-growth tropical forest.PRT3,999,ANPP_repro_OM,1.79,ANPP_foliage_OM,6.45,NA,NA,0.2775193798449612,NA,3.225,NA
+1796,Panama Transect 4.Santa Rita.Chagres National Park,old-growth tropical forest.PRT4,999,ANPP_repro_OM,0.64,ANPP_foliage_OM,6.74,NA,NA,0.09495548961424333,NA,3.37,NA
+1798,Paracou,old-growth tropical forest.PAR,999,ANPP_repro_OM,0.55,ANPP_foliage_OM,4.2,NA,NA,0.13095238095238096,NA,2.1,NA
+1852,Piste de Saint-Elie (ECEREX),old-growth tropical forest.PSE,999,ANPP_repro_OM,0.9,ANPP_foliage_OM,5.31,NA,NA,0.16949152542372883,NA,2.655,NA
+1855,Podocarpus 1,UM,999,ANPP_repro_C,0.45,ANPP_foliage_C,2.54,NPP_3_C,6.3,0.17716535433070865,0.07142857142857144,2.54,6.3
+1856,Podocarpus 2,UM,999,ANPP_repro_C,0.21,ANPP_foliage_C,2.57,NPP_3_C,6.34,0.08171206225680934,0.033123028391167195,2.57,6.34
+1986,Reserva Biologica San Francisco 1,UM,999,ANPP_repro_C,0.18,ANPP_foliage_C,2.51,NPP_3_C,6.08,0.07171314741035857,0.029605263157894735,2.51,6.08
+1987,Reserva Biologica San Francisco 2,UM,999,ANPP_repro_C,0.05,ANPP_foliage_C,1.34,NPP_3_C,3.85,0.03731343283582089,0.012987012987012988,1.34,3.85
+2019,Rio Ucayali 1,old-growth tropical forest.UCA1,999,ANPP_repro_OM,0.97,ANPP_foliage_OM,4.17,NA,NA,0.23261390887290168,NA,2.085,NA
+2020,Rio Ucayali 2,old-growth tropical forest.UCA2,999,ANPP_repro_OM,1.15,ANPP_foliage_OM,4.3,NA,NA,0.26744186046511625,NA,2.15,NA
+2021,Rio Ucayali 3,old-growth tropical forest.UCA3,999,ANPP_repro_OM,1.23,ANPP_foliage_OM,4.11,NA,NA,0.2992700729927007,NA,2.055,NA
+2085,San Carlos de Rio Negro Bana,short-statured tropical forest (bana),999,ANPP_repro_OM,0.12,ANPP_foliage_OM,2.07,NA,NA,0.057971014492753624,NA,1.035,NA
+2092,San Carlos de Rio Negro Species-rich Tierra Firme (Oxisols),UM Mature terra firma,999,ANPP_repro_OM,0.4,ANPP_foliage_C,2.82,NA,NA,0.14184397163120568,NA,2.82,NA
+2092,San Carlos de Rio Negro Species-rich Tierra Firme (Oxisols),UM Mature terra firma,999,ANPP_repro_OM,0.4,ANPP_foliage_OM,7.57,NA,NA,0.052840158520475564,NA,3.785,NA
+2093,San Carlos de Rio Negro Tall Caatinga,mature tall caatinga natural forest,999,ANPP_repro_OM,0.21,ANPP_foliage_OM,3.99,NA,NA,0.05263157894736842,NA,1.995,NA
+2203,Sinop,old-growth tropical forest.SIN,999,ANPP_repro_OM,0.27,ANPP_foliage_OM,5.55,NA,NA,0.04864864864864865,NA,2.775,NA
+2323,Tambopata,old-growth tropical forest.TAM6,999,ANPP_repro_OM,1.05,ANPP_foliage_OM,7.09,NA,NA,0.14809590973201694,NA,3.545,NA
+2324,Tambopata,partially flooded tropical forest.TAM5,NI,ANPP_repro_OM,1,ANPP_foliage_OM,8.36,NA,NA,0.11961722488038279,NA,4.18,NA
+2321,Tambopata-Candamo Reserve (TAM-05),permanent plot TAM-05,999,ANPP_repro_C,0.42,ANPP_foliage_C,4.03,NA,NA,0.1042183622828784,NA,4.03,NA
+2322,Tambopata-Candamo Reserve (TAM-06),permanent plot TAM-06,999,ANPP_repro_C,0.55,ANPP_foliage_C,3.71,NA,NA,0.14824797843665768,NA,3.71,NA
+2511,Walker Branch,"UM, agricultural abandonment in 1940",53,ANPP_repro_C,0.01,ANPP_foliage_C,2.33,NPP_3_C,5.85,0.004291845493562232,0.0017094017094017096,2.33,5.85
+2511,Walker Branch,"UM, agricultural abandonment in 1940",53,ANPP_repro_C,0.01,ANPP_foliage_C,2.33,NPP_4_C,6.04,0.004291845493562232,0.0016556291390728477,2.33,6.04
+2511,Walker Branch,"UM, agricultural abandonment in 1940",54,ANPP_repro_C,0.01,ANPP_foliage_C,2.36,NPP_3_C,7.38,0.00423728813559322,0.0013550135501355014,2.36,7.38
+2511,Walker Branch,"UM, agricultural abandonment in 1940",54,ANPP_repro_C,0.01,ANPP_foliage_C,2.36,NPP_4_C,7.63,0.00423728813559322,0.001310615989515072,2.36,7.63
+2511,Walker Branch,"UM, agricultural abandonment in 1940",55,ANPP_repro_C,0.28,ANPP_foliage_C,2.38,NPP_3_C,7.2,0.11764705882352942,0.03888888888888889,2.38,7.2
+2511,Walker Branch,"UM, agricultural abandonment in 1940",55,ANPP_repro_C,0.28,ANPP_foliage_C,2.38,NPP_4_C,7.41,0.11764705882352942,0.037786774628879895,2.38,7.41
+2511,Walker Branch,"UM, agricultural abandonment in 1940",56,ANPP_repro_C,0.04,ANPP_foliage_C,2.45,NPP_3_C,8.1,0.016326530612244896,0.0049382716049382715,2.45,8.1
+2511,Walker Branch,"UM, agricultural abandonment in 1940",56,ANPP_repro_C,0.04,ANPP_foliage_C,2.45,NPP_4_C,8.32,0.016326530612244896,0.004807692307692308,2.45,8.32
+2511,Walker Branch,"UM, agricultural abandonment in 1940",57,ANPP_repro_C,0.15,ANPP_foliage_C,2.43,NPP_3_C,6.91,0.06172839506172839,0.02170767004341534,2.43,6.91
+2511,Walker Branch,"UM, agricultural abandonment in 1940",57,ANPP_repro_C,0.15,ANPP_foliage_C,2.43,NPP_4_C,7.13,0.06172839506172839,0.021037868162692847,2.43,7.13
+2511,Walker Branch,"UM, agricultural abandonment in 1940",58,ANPP_repro_C,0.01,ANPP_foliage_C,2.29,NPP_3_C,6.17,0.004366812227074236,0.001620745542949757,2.29,6.17
+2511,Walker Branch,"UM, agricultural abandonment in 1940",58,ANPP_repro_C,0.01,ANPP_foliage_C,2.29,NPP_4_C,6.38,0.004366812227074236,0.0015673981191222572,2.29,6.38
+2511,Walker Branch,"UM, agricultural abandonment in 1940",59,ANPP_repro_C,0.41,ANPP_foliage_C,2.33,NPP_3_C,8.17,0.17596566523605148,0.05018359853121175,2.33,8.17
+2511,Walker Branch,"UM, agricultural abandonment in 1940",59,ANPP_repro_C,0.41,ANPP_foliage_C,2.33,NPP_4_C,8.38,0.17596566523605148,0.048926014319809065,2.33,8.38
+2511,Walker Branch,"UM, agricultural abandonment in 1940",60,ANPP_repro_C,0.01,ANPP_foliage_C,2.57,NPP_3_C,6.79,0.003891050583657588,0.0014727540500736377,2.57,6.79
+2511,Walker Branch,"UM, agricultural abandonment in 1940",60,ANPP_repro_C,0.01,ANPP_foliage_C,2.57,NPP_4_C,7.02,0.003891050583657588,0.0014245014245014246,2.57,7.02
+2640,Wytham Woods,ancient semi-natural woodland,999,ANPP_repro_C,0.32,ANPP_foliage_C,1.84,NA,NA,0.17391304347826086,NA,1.84,NA
+2640,Wytham Woods,ancient semi-natural woodland,999,ANPP_repro_C,0.32,ANPP_foliage_C,2.4,NA,NA,0.13333333333333333,NA,2.4,NA
+2640,Wytham Woods,ancient semi-natural woodland,999,ANPP_repro_C,0.37,ANPP_foliage_C,1.84,NA,NA,0.2010869565217391,NA,1.84,NA
+2640,Wytham Woods,ancient semi-natural woodland,999,ANPP_repro_C,0.37,ANPP_foliage_C,2.4,NA,NA,0.15416666666666667,NA,2.4,NA
+2716,Zafire Altura,old-growth tropical forest.ZAR4,999,ANPP_repro_OM,0.9,ANPP_foliage_OM,6.96,NA,NA,0.12931034482758622,NA,3.48,NA
+2717,Zafire flooded,partially flooded tropical forest.ZAR2,NI,ANPP_repro_OM,1.22,ANPP_foliage_OM,6.66,NA,NA,0.18318318318318316,NA,3.33,NA
+2718,Zafire TF,old-growth tropical forest.ZAR3,999,ANPP_repro_OM,0.63,ANPP_foliage_OM,6.71,NA,NA,0.09388971684053651,NA,3.355,NA
+2719,Zafire varrilal,short-statured tropical forest.ZAR1,NI,ANPP_repro_OM,0.5,ANPP_foliage_OM,3.79,NA,NA,0.13192612137203166,NA,1.895,NA
