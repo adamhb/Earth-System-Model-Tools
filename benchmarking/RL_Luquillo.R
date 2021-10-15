@@ -43,7 +43,7 @@ CTE_Control <- CTE %>%
 
 
   
-#observatsion of R g/m2yr to add to csv
+#observatsion of R g/m2yr
 
 Rdf <- CTE_control %>% 
   add_column(case = "Luquillo obs.", var = "Rgm2yr") %>% 
@@ -60,7 +60,7 @@ LuquillomeanRgm2yr <- Rdf %>%
 
 
 
-#write observations to a csv
+#write R/ L observations to a csv
 CTE_control %>% 
   add_column(case = "Luquillo obs.", var = "RoL") %>% 
   rename(simYr = Year, value = RL) %>% 
@@ -69,6 +69,16 @@ CTE_control %>%
   bind_rows(Rdf) %>% 
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
+#write observations for R/ANPP to a csv
+# source: https://daac.ornl.gov/NPP/guides/NPP_LQL.html
+# file = "lql1_npp_r1.txt"
+RANPP_Luquillo <- tibble(case = "Luquillo obs.", 
+                         simYr = NA, 
+                         var = c("R", "ANPP", "R/ANPP"), 
+                         value = c(51, (525*2), 51/(525*2)),
+                         units = c(rep("g/m2yr", 2), NA)) # units are g/m2yr
+
+write_csv(RANPP_Luquillo, path = "data/RANPP_Luquillo_obs.csv")
 
 
 #plot 
@@ -106,6 +116,8 @@ CTE %>%
                linetype = Component,
                color = ID)) +
     geom_line()
-  
+
+
+
 
 
