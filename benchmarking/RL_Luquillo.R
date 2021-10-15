@@ -12,7 +12,7 @@ source('utils/figure_formatting_esm_tools.R')
 # Environmental Data Initiative. https://doi.org/10.6073/pasta/725e8064673b05a53ef5bf5a45abb4db (Accessed 2021-10-08).
 
 nTraps_plot <-10 # 10 litterfall traps per plot
-trap_size_m2 <- 1.75^2# 1.75 m X 1.75 m baskets
+trap_size_m2 <- 1.75^2 # 1.75 m X 1.75 m baskets
 
 
 CTE <- read_csv("data/CTE_clean.csv")
@@ -51,6 +51,15 @@ Rdf <- CTE_control %>%
   select(case, simYr, var, value)
 
 
+
+#Luquillo average R g/m2yr
+LuquillomeanRgm2yr <- Rdf %>% 
+  filter(var == "Rgm2yr") %>% 
+  summarise(mean(value)) %>% 
+  as.numeric(.)
+
+
+
 #write observations to a csv
 CTE_control %>% 
   add_column(case = "Luquillo obs.", var = "RoL") %>% 
@@ -59,6 +68,8 @@ CTE_control %>%
   ungroup() %>%
   bind_rows(Rdf) %>% 
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
+
+
 
 #plot 
   CTE_control %>% 
@@ -71,9 +82,10 @@ CTE_control %>%
   
   
   
-  ######### rwa values look anomalously low, by a factor of 10
+  ######### raw values look anomalously low, by a factor of 10
   ######### when metadata says litter was pooled from the 10 baskets per site, do they mean averaged? 
   ######## *not* including the additional dividion by 10 makes these values make much more sense
+  ###### I emailed Jess Zimmerman about this, hopefully he gets back to me quickly
   
 CTE %>%
     left_join(CTE_Block_desc, by = c("Block", "Plot"))  %>%

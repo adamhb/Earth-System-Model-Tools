@@ -95,6 +95,12 @@ Rdf <- Y5 %>%
   rename(simYr = Year, value = Repro_corr) %>% 
   select(case, simYr, var, value)
 
+#BCI average R g/m2yr
+BCImeanRgm2yr <- Rdf %>% 
+  filter(var == "Rgm2yr") %>% 
+  summarise(mean(value)) %>% 
+  as.numeric(.)
+
 
 # write observations for R g/m2yr and R/L to a csv
 Y5 %>%
