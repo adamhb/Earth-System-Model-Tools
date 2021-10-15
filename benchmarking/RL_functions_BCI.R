@@ -110,11 +110,11 @@ get_RL_df <- function(data, fruit_traits, use_best_est = T){
       dsp <-  NA # dsp counts are incoporated into estimate from capsules, fragments 
       
       if(use_best_est == T){
-        mfm <- get_best_est(data, parts = c(1, 7, 10), est = mf_mass)
+        mfm <- get_best_est(data, parts = c(1, 10), est = mf_mass)
       }else{
-        mfm <- get_mass(data, parts = c(1, 7, 10))
+        mfm <- get_mass(data, parts = c(1, 10))
       }
-      other_part_mass = get_mass(data, parts = c(0, 5, 6, 8, 9)) # mass from buds, flowers, immature fruit, aborted fruit
+      other_part_mass = get_mass(data, parts = c(0, 5, 6, 7, 8, 9)) # mass from buds, flowers, immature fruit, aborted fruit
       all_R_corr = sum(est_mfm_caps, dsp, mfm, other_part_mass, na.rm = T) # sum all components
       
       #############################if we have only fruit mass or dsp mass from trait data                       
@@ -125,15 +125,15 @@ get_RL_df <- function(data, fruit_traits, use_best_est = T){
       
       if(use_best_est == T){
         dsp <- get_best_est(data, parts = 2, est = dsp_mass)
-        mfm <- get_best_est(data, parts = c(1, 7, 10), est = avail_dry_mass)
+        mfm <- get_best_est(data, parts = c(1, 10), est = avail_dry_mass)
         
         
       }else{
         dsp <- get_mass(data, parts = 2)
-        mfm <- get_mass(data, parts = c(1, 7, 10))          
+        mfm <- get_mass(data, parts = c(1, 10))          
       }
       
-      other_part_mass = get_mass(data, parts = c(0, 3, 4, 5, 6, 8, 9)) #other part mass summed, includes capsules, fragments
+      other_part_mass = get_mass(data, parts = c(0, 3, 4, 5, 6, 7, 8, 9)) #other part mass summed, includes capsules, fragments
       all_R_corr = sum(est_mfm_caps, dsp, mfm, other_part_mass, na.rm = T)  # sum components
       
     }else if (is.na(mf_mass) & is.na(dsp_mass)){
