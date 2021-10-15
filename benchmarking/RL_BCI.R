@@ -100,7 +100,7 @@ RANPP_BCI <- tibble(site = "BCI",
                     value = c(BCImeanRgm2yr, 1800, BCImeanRgm2yr/1800),
                     units = c(rep("g m-2 yr-1", 2), "-")) # units are g/m2yr
 
-
+#write_csv(RANPP_BCI, path = "data/RANPP_BCI_obs.csv")
 
 # join all BCI observations, write to .csv
 BCIdf <- Y5 %>% 
