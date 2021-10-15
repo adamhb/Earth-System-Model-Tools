@@ -66,7 +66,7 @@ CTE_control %>%
   rename(simYr = Year, value = RL) %>% 
   select(case,simYr,var,value) %>%
   ungroup() %>%
-  bind_rows(Rdf) %>% 
+  #bind_rows(Rdf) %>% 
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
 #write observations for R/ANPP to a csv
@@ -76,7 +76,7 @@ RANPP_Luquillo <- tibble(case = "Luquillo obs.",
                          simYr = NA, 
                          var = c("R", "ANPP", "R/ANPP"), 
                          value = c(51, (525*2), 51/(525*2)),
-                         units = c(rep("g/m2yr", 2), NA)) # units are g/m2yr
+                         units = c(rep("g m-2 yr-1", 2), NA)) # units are g/m2yr
 
 write_csv(RANPP_Luquillo, path = "data/RANPP_Luquillo_obs.csv")
 

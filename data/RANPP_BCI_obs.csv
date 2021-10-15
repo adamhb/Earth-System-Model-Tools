@@ -1,4 +1,4 @@
 case,simYr,var,value,units
-BCI obs.,NA,R,237.17687500000002,g/m2yr
-BCI obs.,NA,ANPP,1800,g/m2yr
+BCI obs.,NA,R,237.17687500000002,g m-2 yr-1
+BCI obs.,NA,ANPP,1800,g m-2 yr-1
 BCI obs.,NA,R/ANPP,0.13176493055555558,NA
