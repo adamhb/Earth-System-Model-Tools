@@ -42,43 +42,53 @@ CTE_Control <- CTE %>%
   filter(Year>2002) #full years
 
 
-  
-#observatsion of R g/m2yr
-
-Rdf <- CTE_control %>% 
-  add_column(case = "Luquillo obs.", var = "Rgm2yr") %>% 
-  rename(simYr = Year, value = Rgm2yr) %>% 
-  select(case, simYr, var, value)
-
-
 
 #Luquillo average R g/m2yr
-LuquillomeanRgm2yr <- Rdf %>% 
-  filter(var == "Rgm2yr") %>% 
-  summarise(mean(value)) %>% 
-  as.numeric(.)
+LuquillomeanRgm2yr <- mean(CTE_control$Rgm2yr) 
+# Not currently using this value
+
+
+#write observations for R/ANPP to a csv
+# source: https://daac.ornl.gov/NPP/guides/NPP_LQL.html
+# file = "lql1_npp_r1.txt"
+RANPP_Luquillo <- tibble(site = "Luquillo", 
+                         year = NA, 
+                         var = c("R", "ANPP", "R/ANPP"), 
+                         value = c(51, (525*2), 51/(525*2)),
+                         units = c(rep("g m-2 yr-1", 2), NA)) # units are g/m2yr
+
+#write_csv(RANPP_Luquillo, path = "data/RANPP_Luquillo_obs.csv")
+
+
+  
+# write all Luquillo observatsion to .csv
+
+Luquillodf <- CTE_control %>% 
+  add_column(site = "Luquillo") %>% 
+  rename(year = Year, 
+         R = Rgm2yr, 
+         L = Lgm2yr,
+         `R/L` = RL) %>% 
+  pivot_longer(cols = c(R, L, `R/L`), names_to = "var") %>% 
+  mutate(units = ifelse((var == "R" | var == "L"), "g m-2 y-1", "-")) %>%
+  arrange(var) %>% 
+  select(site, year, var, value, units) %>% 
+  bind_rows(RANPP_Luquillo) %>% 
+  write_csv("data/all_Luquillo_obs.csv")
+  
 
 
 
 #write R/ L observations to a csv
 CTE_control %>% 
-  add_column(case = "Luquillo obs.", var = "RoL") %>% 
+  add_column(case = "Luquillo obs.", var = "R/L") %>% 
   rename(simYr = Year, value = RL) %>% 
   select(case,simYr,var,value) %>%
   ungroup() %>%
   #bind_rows(Rdf) %>% 
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
-#write observations for R/ANPP to a csv
-# source: https://daac.ornl.gov/NPP/guides/NPP_LQL.html
-# file = "lql1_npp_r1.txt"
-RANPP_Luquillo <- tibble(case = "Luquillo obs.", 
-                         simYr = NA, 
-                         var = c("R", "ANPP", "R/ANPP"), 
-                         value = c(51, (525*2), 51/(525*2)),
-                         units = c(rep("g m-2 yr-1", 2), NA)) # units are g/m2yr
 
-write_csv(RANPP_Luquillo, path = "data/RANPP_Luquillo_obs.csv")
 
 
 #plot 
