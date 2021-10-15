@@ -70,4 +70,30 @@ CTE_control %>%
   adams_theme
   
   
-Rdf$value *10000
+  
+  ######### rwa values look anomalously low, by a factor of 10
+  ######### when metadata says litter was pooled from the 10 baskets per site, do they mean averaged? 
+  ######## *not* including the additional dividion by 10 makes these values make much more sense
+  
+CTE %>%
+    left_join(CTE_Block_desc, by = c("Block", "Plot"))  %>%
+  filter(Treatment == "Control") %>% #filter for control plots
+  rename(L = `Leaves (in g)`,
+         R = `Fruits;seeds;flower (g)`)  %>%
+  select(Block, Plot, Treatment, Date, Year, R, L ) %>%
+    group_by(Block, Plot) %>% 
+    mutate(ID = cur_group_id()) %>% 
+    mutate(ID = factor(ID)) %>% 
+    ungroup() %>% 
+    group_by(ID, Year) %>% 
+  summarise(Ryr = sum(R, na.rm = T)/(10*1.75^2), #######################to divide, or not divide ...
+            Lyr = sum(L, na.rm = T)/(10*1.75^2)) %>%
+    pivot_longer(cols = c("Ryr", "Lyr"), names_to = "Component", values_to = "Value") %>% 
+    ggplot(aes(x = Year, 
+               y = Value,
+               linetype = Component,
+               color = ID)) +
+    geom_line()
+  
+
+
