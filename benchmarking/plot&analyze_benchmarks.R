@@ -70,7 +70,12 @@ rec_benchmarks_plot_over_time
 
 #I already have r/l for BCI, need to get these metrics for other sites
 read_csv('data/BCI_mo_RL.csv')
-obs_data_RoL <- read_csv("data/RoverL_BCI_obs.csv") %>% add_column(site = "bci")
+obs_data_RoL_bci <- read_csv("data/RoverL_BCI_obs.csv") %>% add_column(site = "bci")
+obs_data_RoANPP_bci <- obs_data_RoL_bci[1,]
+obs_data_RoL_luq <- read_csv("data/RoverL_Luquillo_obs.csv") %>% add_column(site = "luq")
+obs_data_RoL_scbi <- read_csv("data/SCBI_RL.csv") %>% add_column(site = "scbi")
+obs_data_RoL_serc <- read_csv("data/SERC_RL.csv") %>% add_column(site = "serc")
+
 
 
 
