@@ -27,26 +27,28 @@ CTE_Block_desc <- tibble(Block = rep(c("A", "B", "C"), ea = 4),
                          Plot = rep(1:4, 3),
                          Treatment = c(bA, bB, bC))
 
-CTE_control <- CTE %>% 
+
+CTE_Control <- CTE %>% 
   left_join(CTE_Block_desc, by = c("Block", "Plot")) %>% #add treatment information
   filter(Treatment == "Control") %>% #filter for control plots
   rename(L = `Leaves (in g)`,
          R = `Fruits;seeds;flower (g)`) %>% 
-  mutate(Lgm2 = L / (nTraps_plot*trap_size_m2),
-         Rgm2 = R / (nTraps_plot*trap_size_m2)) %>%# observations from each plot are sum of material from 10 traps
-  mutate(Yr_mo = as.Date(paste(month(Date), "01", year(Date), sep = "/"), format = "%m/%d/%Y")) %>% # create Yr-mo for easy grouping
-  group_by(Yr_mo, Block, Plot) %>% # monthly g/m2month for each plot within each block
-  summarise(Lgm2moplot = sum(Lgm2, na.rm = T),
-            Rgm2moplot = sum(Rgm2, na.rm = T)) %>%
-  group_by(Yr_mo) %>% # get monthly avg for all blocks 
-  summarise(Lgm2mo = mean(Lgm2moplot, na.rm = T),
-            Rgm2mo = mean(Rgm2moplot, na.rm = T)) %>% 
-  group_by(Year = year(Yr_mo)) %>%  # sum over year
-  summarise(Lgm2yr = sum(Lgm2mo, na.rm = T),
-            Rgm2yr = sum(Rgm2mo, na.rm = T)) %>% 
-  mutate(RL = Rgm2yr/Lgm2yr) %>% 
-  filter(Year>2002) # filter for only full years of data
+  mutate(Lgm2 = L / (nTraps_plot*trap_size_m2), 
+         Rgm2 = R / (nTraps_plot*trap_size_m2)) %>% 
+  select(Date, Year, Block, Plot, Lgm2, Rgm2) %>% 
+  group_by(Year) %>% 
+  summarise(Rgm2yr = sum(Rgm2)/3, # three unique block-plots
+            Lgm2yr = sum(Lgm2)/3) %>% 
+  filter(Year>2002) #full years
+
+
   
+#observatsion of R g/m2yr to add to csv
+
+Rdf <- CTE_control %>% 
+  add_column(case = "Luquillo obs.", var = "Rgm2yr") %>% 
+  rename(simYr = Year, value = Rgm2yr) %>% 
+  select(case, simYr, var, value)
 
 
 #write observations to a csv
@@ -55,11 +57,11 @@ CTE_control %>%
   rename(simYr = Year, value = RL) %>% 
   select(case,simYr,var,value) %>%
   ungroup() %>%
+  bind_rows(Rdf) %>% 
   write_csv(file = "data/RoverL_Luquillo_obs.csv")
 
 #plot 
   CTE_control %>% 
-    filter(Year > 2002)%>% # full years 
   ggplot() +
   geom_boxplot(aes(x = "", 
                    y = RL)) +
@@ -67,8 +69,5 @@ CTE_control %>%
   ggtitle("Control plots of CTE, El Verde, Luquillo (2003-2019)") +
   adams_theme
   
-
-
-
-
-
+  
+Rdf$value *10000

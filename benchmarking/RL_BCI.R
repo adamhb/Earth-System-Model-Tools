@@ -65,12 +65,12 @@ Y3 <- Y2 %>%
   ungroup() 
 
 # summarise over species, convert g/year --> g/m2year
-# 64 traps, each 0.5 m2
+
 Y4 <- Y3 %>%
   rowwise() %>%
   mutate(Repro_c = ifelse(is.na(all_R_corr), all_R, all_R_corr)) %>% #if no R corrrection, use "all_R"
   group_by(Year) %>% 
-  summarise(Leaf = sum(all_L, na.rm =T)/(trap_size * n_traps),  #
+  summarise(Leaf = sum(all_L, na.rm =T)/(trap_size * n_traps),  ## 64 traps, each 0.5 m2
             Repro_corr = sum(Repro_c, na.rm = T)/(trap_size * n_traps),
             Repro = sum(all_R, na.rm = T)/(trap_size * n_traps)) %>% 
   mutate(L_corr =round(Leaf*1.097, 1)) %>% 
@@ -88,7 +88,7 @@ Y5 %>%
                    y = Value, 
                    group = Type)) 
 
-# observations for R g/m2yr to a csv
+# observations for R g/m2yr to add to .csv
 Rdf <- Y5 %>% 
   filter(Type == "RL_corr") %>% 
   add_column(case = "BCI obs.", var = "Rgm2yr") %>% 
