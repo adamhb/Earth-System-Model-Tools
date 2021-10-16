@@ -61,7 +61,7 @@ LuquillomeanRgm2yr <- Rdf %>%
 
 
 #write observations to a csv
-CTE_control %>% 
+CTE_Control %>% 
   add_column(case = "Luquillo obs.", var = "RoL") %>% 
   rename(simYr = Year, value = RL) %>% 
   select(case,simYr,var,value) %>%
