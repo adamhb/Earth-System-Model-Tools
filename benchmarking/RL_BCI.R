@@ -88,30 +88,51 @@ Y5 %>%
                    y = Value, 
                    group = Type)) 
 
-# observations for R g/m2yr to add to .csv
-Rdf <- Y5 %>% 
+
+# BCI average R g/m2yr
+BCImeanRgm2yr <- mean(Y5$Repro_corr[Y5$Type == "RL_corr"])
+
+
+# ANPP estimate info from https://daac.ornl.gov/NPP/guides/NPP_BRR.html
+RANPP_BCI <- tibble(site = "BCI", 
+                    year = NA, 
+                    var = c("R", "ANPP", "R/ANPP"), 
+                    value = c(BCImeanRgm2yr, 1800, BCImeanRgm2yr/1800),
+                    units = c(rep("g m-2 yr-1", 2), "-")) # units are g/m2yr
+
+#write_csv(RANPP_BCI, path = "data/RANPP_BCI_obs.csv")
+
+# join all BCI observations, write to .csv
+BCIdf <- Y5 %>% 
   filter(Type == "RL_corr") %>% 
-  add_column(case = "BCI obs.", var = "Rgm2yr") %>% 
-  rename(simYr = Year, value = Repro_corr) %>% 
-  select(case, simYr, var, value)
+  add_column(site = "BCI") %>% 
+  rename(year = Year, 
+         L = L_corr, 
+         R = Repro_corr, 
+         "R/L" = Value) %>% 
+  select(site, year, R, L, `R/L`) %>% 
+  pivot_longer(cols = c(R, L, `R/L`), names_to = "var") %>% 
+  mutate(units = ifelse((var == "R" | var == "L"), "g m-2 y-1", "-")) %>%
+  arrange(var) %>% 
+  bind_rows(RANPP_BCI) %>% 
+  write_csv("data/all_BCI_obs.csv")
 
-#BCI average R g/m2yr
-BCImeanRgm2yr <- Rdf %>% 
-  filter(var == "Rgm2yr") %>% 
-  summarise(mean(value)) %>% 
-  as.numeric(.)
 
 
-# write observations for R g/m2yr and R/L to a csv
+# write observations for R/L to a csv
 Y5 %>%
   filter(Type == "RL_corr") %>%
-  add_column(case = "BCI obs.", var = "RoL") %>%
+  add_column(case = "BCI obs.", var = "R/L") %>%
   rename(simYr = Year, value = Value) %>% 
   select(case,simYr,var,value) %>%
   ungroup() %>%
-  bind_rows(Rdf) %>%
   write_csv(path = "data/RoverL_BCI_obs.csv")
-  
+
+
+
+
+
+
 
 
 
