@@ -251,8 +251,11 @@ getAnnualMeanAfterSpecificYr <- function(df,var,start_date_str){
 }
 
 
-
-
+#calculate dbh (cm) from height (m)
+h2d <- function(h = 1.3, p1 = 57.6, p2 = 0.74, p3 = 21.6){
+  d <- ((h*p3) / (p1-h))^(1/p2)
+  return(d)
+}
 
 
   

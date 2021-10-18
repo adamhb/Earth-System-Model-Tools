@@ -171,7 +171,25 @@ bcifull_clean <- filter_for_canopy_trees(clean_cen_data(df = bcifull_raw,from_na
 scbifull_clean <- filter_for_canopy_trees(clean_cen_data(df = scbifull_raw,from_names = scbiFieldNames,site_name = "scbi"))
 sercfull_clean <- filter_for_canopy_trees(clean_cen_data(df = sercfull_raw,from_names = sercFieldNames,site_name = "serc"))
 
+
+
+#create mapping between sp code and Latin name
+load('bci.spptable.rdata')
+bci_sp_latin_map <- bci.spptable %>% select(sp,Latin) %>% rename(latin = Latin)
+
+
+sp_latin_map <- rbind(luqfull_clean,bcifull_clean,scbifull_clean,sercfull_clean) %>%
+  select(sp,latin) %>%
+  distinct() %>%
+  drop_na(latin) %>%
+  rbind(bci_sp_latin_map)
+
+write_csv(sp_latin_map,'data/spLatinMap.csv')
+
+
 print("Done cleaning census data!")
+
+
 
 
 

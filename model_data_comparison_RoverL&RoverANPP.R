@@ -27,7 +27,10 @@ RoL_BCI_obs <- read_csv("data/RoverL_BCI_obs.csv") %>%
   filter(var == "R/L")
 
 
-#load R / ANPP obs
+
+
+
+
 RoANPP_BCI_obs <- read_csv("data/RoverL_BCI_obs.csv") %>%
   filter(var == 'Rgm2yr') %>%
   add_column(ANPP = bci_ANPP) %>%
@@ -44,13 +47,29 @@ recruitmentBCIobs <-  read_csv("data/Recruitment_BCI_obs.csv") %>%
   select(case,var,value,sd)
 
 #join all obs.
-BCI_obs <- rbind(RoL_BCI_obs,RoANPP_BCI_obs) %>%
+#load R / ANPP obs
+bci_all_obs <- read_csv('data/all_BCI_obs.csv')
+
+BCI_obs <- bci_all_obs %>%
+  select(-units) %>%
+  drop_na(year) %>%
+  spread(var,value) %>%
+  mutate(`R/ANPP` = case_when(
+    site == "BCI" ~ R / 1800,
+    site == "Luquillo" ~ 51 / 1050
+  )) %>%
+  toLongForm(c('R','L','R/L','R/ANPP')) %>%
+  select(-L) %>%
+  rename(yr = year) %>%
+  filter(var != "R") %>%
+  mutate(site = "BCI obs.") %>% rename(case = site) %>%
+  select(case,var,value) %>%
   group_by(case,var) %>% summarise(Mvalue = mean(value), sd = sd(value)) %>%
   rename(value = Mvalue) %>%
   ungroup() %>%
   rbind(recruitmentBCIobs)
 
-write_csv(BCI_obs,"data/bciObsClean.csv")
+#write_csv(BCI_obs,"data/bciObsClean.csv")
 
 ###################################
 ########model predictions##########
@@ -166,18 +185,18 @@ modelDataComp_RoANPP <- modelPredictionsBCI %>%
 
 modelDataComp_Recruitment <- modelPredictionsBCI %>%
   filter(var == "RECRUITMENT") %>%
-  ggplot(aes(case,value,color = RA)) +
+  ggplot(aes(case,value*0.19878,color = RA)) +
   geom_point(size = 7) +
-  geom_errorbar(aes(ymin = value-sd,ymax = value+sd, width = 0)) +
+  geom_errorbar(aes(ymin = value*0.19878-sd*0.19878,ymax = value*0.19878+sd*0.19878, width = 0)) +
   geom_point(data = BCI_obs %>% filter(var == "RECRUITMENT"), 
              mapping = aes(case,value), color ="black", shape = 2, size = 5, stroke = 2) +
   geom_errorbar(data = BCI_obs %>% filter(var == "RECRUITMENT"), 
                 mapping = aes(ymin = value-sd,ymax = value+sd, width = 0), color = "black") +
   scale_color_continuous() +
   rec.y.axis +
-  scale_y_log10(breaks = c(100,1000,10000,32000),
-                labels = c(100,1000,10000,32000),
-                limits = c(50,32000)) +
+  scale_y_log10(breaks = c(100,1000,10000),
+                labels = c(100,1000,10000),
+                limits = c(50,10000)) +
   labs(title = "Recruitment") +
   adams_theme +
   theme(axis.title.x=element_blank(), 

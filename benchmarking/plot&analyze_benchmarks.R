@@ -6,8 +6,9 @@ source('utils/supporting_funcs_esm_tools.R')
 source('generalFunctions.R')
 
 vitalRates_allSites <- read_csv("data/vital_rates_all_sites.csv")
+spLatinMap <- read_csv('data/spLatinMap.csv')
 
-str(vitalRates_allSites)
+vitalRates_allSites %>% left_join(spLatinMap,by = "sp") 
 
 m2_per_ha <- 1e4
 ########################################################
@@ -20,24 +21,32 @@ m2_per_ha <- 1e4
 obs_rec_rates_all_sites_df <- vitalRates_allSites %>% #turn this into a function?
   group_by(site, cen_interval) %>%
   summarise(R_ha_yr = sum(R_t1,na.rm = T) * m2_per_ha, #the sum of all species area-based recruitment rates
-            M_ha_yr = sum(M_t1,na.rm = T) * m2_per_ha) #the sum of all species area-based mortality rates
+            M_ha_yr = sum(M_t1,na.rm = T) * m2_per_ha) %>% #the sum of all species area-based mortality rates
+  group_by(site) %>%
+  summarise(Rm = mean(R_ha_yr), sd = sd(R_ha_yr), n = length(R_ha_yr)) %>%
+  rename(R_ha_yr = Rm) %>%
+  ungroup() %>%
+  mutate(se = sd / sqrt(n))
+
+
+
 
 
 obs_rec_rates_all_sites <- obs_rec_rates_all_sites_df %>%
   ggplot(aes(site,R_ha_yr)) +
-  geom_boxplot() +
+  geom_point(shape = 2, size = 5, stroke = 2) +
+  geom_errorbar(aes(ymin = R_ha_yr-se,ymax = R_ha_yr+se, width = 0)) +
   #stat_summary(fun = median, fun.ymax = length,
   #             geom = "text", aes(label = ..ymax..), vjust = -1) +
   #stat_summary(fun.data = give.n, geom = "text", fun = median) +
   ylab(expression(paste("N recruits"," [ha"^"-1"," yr"^"-1","]"))) +
   scale_x_discrete(labels = c('bci\nn = 7','luq\nn = 5','scbi\nn = 2','serc\nn = 1')) +
   xlab(bquote('Site')) +
-  scale_y_continuous(limits = c(0,150)) +
-  theme_minimal() +
+  scale_y_continuous(limits = c(0,100)) +
   adams_theme
 
 
-makePNG(fig = obs_rec_rates_all_sites,path_to_figures, file_name = "obs_rec_rates_all_sites")
+makePNG(fig = obs_rec_rates_all_sites,path_to_figures, file_name = "obs_rec_rates_all_sites", width = 4.5, height = 3.5)
 
 #interesting to see luquillo having a spike in recruitment at beginning
 #was this right after a hurricane?
@@ -47,41 +56,6 @@ rec_benchmarks_plot_over_time
 ################################################################
 #######Plot 2. Plotting litter flux data########################
 ################################################################
-ANPP_df <- read_csv('data/ANPP_ests_BCI_Luquillo.csv')
-bci_ANPP <- ANPP_df %>% filter(Site == 'BCI') %>% pull(ANPP) %>% `/`(2) #dividing by 2 to convert biomass to carbon 
-luq_ANPP <- ANPP_df %>% filter(Site == 'Luquillo') %>% pull(ANPP) %>% mean()
-
-
-#read in and clean data for each site
-RoANPP_BCI_obs <- read_csv("data/RoverL_BCI_obs.csv") %>%
-  filter(var == 'Rgm2yr') %>%
-  add_column(ANPP = bci_ANPP) %>%
-  mutate(`R/ANPP` = value / ANPP) %>%
-  mutate(var = "R/ANPP", value = `R/ANPP`) %>%
-  select(case,simYr,var,value) %>% add_column(site = "bci") %>%
-  rename(yr = simYr) %>% select(site,yr,var,value)
-
-
-
-
-RoL_BCI_obs <- read_csv("data/RoverL_BCI_obs.csv") %>%
-  filter(var == 'RoL') %>% mutate(var = "R/L") %>% add_column(site = "bci") %>%
-  rename(yr = simYr) %>% select(site,yr,var,value)
-
-RoL_LUQ_obs <- read_csv("data/RoverL_Luquillo_obs.csv") %>% add_column(site = "luq") %>%
-  filter(var == "RoL") %>% mutate(var = "R/L") %>%
-  rename(yr = simYr) %>% select(site,yr,var,value)
-
-
-
-#update this once I hear from Rachel. Use the new table here.
-RoANPP_LUQ_obs <- read_csv("data/RoverL_Luquillo_obs.csv") %>% add_column(site = "luq") %>%
-  filter(var == 'Rgm2yr') %>%
-  add_column(ANPP = luq_ANPP) %>%
-  mutate(`R/ANPP` = value / ANPP) %>%
-  mutate(var = "R/ANPP", value = `R/ANPP`) %>%
-  select(case,simYr,var,value)
-  
 RoL_SCBI <- read_csv("data/SCBI_RL.csv") %>% add_column(site = "scbi")
 RoL_SERC <- read_csv("data/SERC_RL.csv") %>% add_column(site = "serc")
 
@@ -90,26 +64,67 @@ RoLSCBIandSERC <- rbind(RoL_SCBI,RoL_SERC) %>%
   rename(yr = Year) %>%
   select(site,yr,var,value) %>%
   filter(var == "RL") %>%
-  mutate(var = "R/L")
+  mutate(var = "R/L") 
 
 
-#join and plot data
-RoLandRoANPP_obs <- rbind(RoANPP_BCI_obs, RoL_BCI_obs, RoL_LUQ_obs,RoLSCBIandSERC) %>%
-  filter(var == "R/L")
+bci_luq_all_obs <- read_csv('data/all_BCI_obs.csv') %>%
+  rbind(read_csv('data/all_Luquillo_obs.csv'))
 
-#plot R over L
+mean_sd_bci_luq <- bci_luq_all_obs %>%
+  select(-units) %>%
+  drop_na(year) %>%
+  spread(var,value) %>%
+  mutate(`R/ANPP` = case_when(
+    site == "BCI" ~ R / 1800,
+    site == "Luquillo" ~ 51 / 1050
+  )) %>%
+  toLongForm(c('R','L','R/L','R/ANPP')) %>%
+  select(-L) %>%
+  rename(yr = year)
+
+
+RoLandRoANPP_obs <- RoLSCBIandSERC %>%
+  rbind(mean_sd_bci_luq) %>%
+  group_by(site,var) %>%
+  summarise(M = mean(value), sd = sd(value), n = length(value)) %>%
+  rename(value = M) %>%
+  ungroup() %>%
+  mutate(site2 = case_when(
+    site == 'BCI' ~ "bci",
+    site == "Luquillo" ~ "luq",
+    TRUE ~ site
+  )) %>% select(-site) %>% rename(site = site2) %>%
+  mutate(site = factor(site, levels = c("bci",'luq','scbi','serc')),
+         se = sd / sqrt(n)) 
+
 RoL_obs_fig <- RoLandRoANPP_obs %>%
+  filter(var == "R/L") %>%
   ggplot(aes(site,value)) +
-  geom_boxplot() +
-  ylab(expression(paste('R [g m'^'-2','yr'^'-1',"] / ",'L [g m'^'-2','yr'^'-1',"]"))) +
-  #stat_summary(fun.data = give.n, geom = "text", fun = median) +
+  geom_point(shape = 2, size = 5, stroke = 2) +
+  geom_errorbar(aes(ymin = value-se,ymax = value+se, width = 0)) +
+  ylab(expression(paste('R / L', ' [g m'^'-2','yr'^'-1',"]"))) +
   xlab(bquote('Site')) +
+  scale_y_continuous(limits = c(0,0.7), breaks = seq(from = 0, to = 0.7, by = 0.1)) +
   scale_x_discrete(labels = c('bci\nn = 5','luq\nn = 17','scbi\nn = 5','serc\nn = 5')) +
-  scale_y_continuous(limits = c(0,1.5)) +
-  theme_minimal() +
   adams_theme
 
-makePNG(RoL_obs_fig,'figures/',file_name = 'RoLandRoANPP_obs_fig',height = 4.5, width = 5)
+
+RoANPP_obs_fig <- RoLandRoANPP_obs %>%
+  filter(var == "R/ANPP") %>%
+  ggplot(aes(site,value)) +
+  geom_point(shape = 2, size = 5, stroke = 2) +
+  geom_errorbar(aes(ymin = value-se,ymax = value+se, width = 0)) +
+  ylab(expression(paste('R / ANPP', ' [g m'^'-2','yr'^'-1',"]"))) +
+  xlab(bquote('Site')) +
+  scale_y_continuous(limits = c(0,0.15)) +
+  scale_x_discrete(labels = c('bci\nn = [5,1]','luq\nn = [1,1]')) +
+  adams_theme
+
+
+RoLandRoANPPfig <- plot_grid(RoL_obs_fig,RoANPP_obs_fig, rel_widths = c(1.3,1), labels = c("(a)","(b)"),
+          label_fontface = "bold", label_x = 0, label_size = 18)
+
+makePNG(RoLandRoANPPfig,'figures/',file_name = 'RoLandRoANPP_obs_fig',height = 5, width = 8.5)
 
 #plot R over ANPP
 rbind(RoANPP_BCI_obs, RoL_BCI_obs, RoL_LUQ_obs,RoLSCBIandSERC) %>%
@@ -154,20 +169,37 @@ luq <- read_csv("data/RoverL_Luquillo_obs.csv") %>% add_column(site = "luq") %>%
   mutate(var = var_new) %>%
   select(-var_new) 
 
-SI_Table_S5 <- rbind(serc_scbi, bci, luq) %>%
-  mutate(units = case_when(
-    var == "R/L" ~ "-",
-    var %in% c("R","L") ~ "g C m-2 yr-1",
-    TRUE ~ var
-  )) 
-  
+# SI_Table_S5 <- rbind(serc_scbi, bci, luq) %>%
+#   mutate(units = case_when(
+#     var == "R/L" ~ "-",
+#     var %in% c("R","L") ~ "g C m-2 yr-1",
+#     TRUE ~ var
+#   )) 
+read_csv('data/ANPP_ests_BCI_Luquillo.csv')
+
+
+# SI_Table_S5 <- RoLSCBIandSERC %>%
+#   rbind(mean_sd_bci_luq) %>%
+#   rbind(tibble(site = "bci", yr = "1969-2000", var = "ANPP", value = 1800)) %>%
+#   rbind(tibble(site = "luq", yr = "1969-2000", var = "R", value = 1800)) %>%
+
+
+
+SI_Table_S5 <- RoLSCBIandSERC %>% add_column(units = NA) %>%
+  rename(year = yr) %>%
+  rbind(read_csv('data/all_BCI_obs.csv') %>%
+         rbind(read_csv('data/all_Luquillo_obs.csv')))
+
 write_csv(x = SI_Table_S5,path = "data/Table_S5.csv")
 
+# read_csv('data/all_BCI_obs.csv') %>%
+#   rbind(read_csv('data/all_Luquillo_obs.csv')) %>%
+#   rbind(RoLSCBIandSERC) %>%
+#   write_csv('data/Table_S5.csv')
 
 
-
-
-
+SI_Table_S4 <- vitalRates_allSites %>% left_join(spLatinMap,by = "sp") 
+write_csv(SI_Table_S4,'data/Table_S4_v2.csv')
 
 
 
