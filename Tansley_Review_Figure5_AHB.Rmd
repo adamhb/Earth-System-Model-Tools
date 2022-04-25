@@ -1,0 +1,585 @@
+---
+title: "Tansley_review_Figure5"
+author: "R.Ward"
+date: "11/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+#library(plotbiomes)
+
+TableS2 <- read.csv("~/cloud/gdrive/review_paper/ReviewPaperRound3/SI/Table_S2_RAFluxData.csv")
+```
+
+```{r}
+Fig5a_df <- TableS2 %>% 
+  filter(!is.na(NPP))
+
+Fig5b_df <- TableS2 %>% 
+  filter(Whittaker_biome != "desert") # remove sites in desert biomes
+# write_csv(Fig5a_df, "~/Desktop/Tansley_review/Fig5a_df.csv")
+# write_csv(Fig5b_df, "~/Desktop/Tansley_review/Fig5b_df.csv")
+
+
+# # summary stats reported in SI
+# All_sites %>% 
+#   mutate(test = ifelse(is.na(UNIQUE_SITE_ID), SUBSITE, UNIQUE_SITE_ID)) %>% 
+#   distinct(test)
+# 
+# 
+# dfNPPsites %>% 
+#   distinct(SUBSITE)
+# 
+# 
+# paste("NPPsite  MAP  data range from", min(dfNPPsites$MAP), "mm to ", max(dfNPPsites$MAP), sep = "")
+# paste("RNPP  data range from", min(temp$RNPP, na.rm = T), "mm to ", max(temp$RNPP, na.rm = T), sep = "")
+# 
+# paste("allsite  MAP  data range from ", min(Fig5b_df$MAP, na.rm = T), " mm to ", max(Fig5b_df$MAP, na.rm = T), " mm",  sep = "")
+# paste("allsite  MAT  data range from ", min(Fig5b_df$MAT, na.rm = T), " degC to ", max(Fig5b_df$MAT, na.rm = T), " degC",  sep = "")
+# paste("allsite  RL  data range from ", min(Fig5b_df$RL, na.rm = T), "  to ", max(Fig5b_df$RL, na.rm = T), " ",  sep = "")
+# 
+# 
+# temp <- dfNPPsites %>% 
+#   mutate(RNPP = R/NPP)
+#   
+# .1852/.0013
+# 
+# citation("ggpubr")
+# 
+# 
+# max(Fig5b_df$`R/L`)
+# 
+# Fig5b_df %>% 
+#   group_by(`Whittaker biome`) %>% 
+#   summarise(var_in_RL = var(`R/L`)) %>% 
+#   arrange(var_in_RL) %>%
+#   filter(`Whittaker biome` != "NA") %>% 
+#   summarise(mean(var_in_RL))
+# #mean = .07
+
+```
+
+```{r}
+axis_size = 15
+
+
+RNPP_plot<- Fig5a_df %>% 
+ # filter(R.NPP <.075) %>% 
+  ggplot(aes(x = R.NPP, 
+             y = R.L)) +
+  geom_point(aes(x = R.NPP, 
+                 y = R.L, 
+                 color = Whittaker_biome, 
+                 size = R)) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              color = "#666666") + 
+   stat_regline_equation(aes(label = ..rr.label..),  label.x = .003, label.y = .78) +
+  ylab("R/L") +
+  xlab("R/NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+  
+
+RNPP_plot
+
+#ggsave(RNPP_plot, device = "png", filename = "~/Desktop/Tansley_review/Figure5_a.png", width = 7, height = 5 )
+```
+
+
+```{r}
+RANPP_plot<- Fig5a_df %>% 
+  drop_na(Whittaker_biome) %>%
+  ggplot(aes(x = R.ANPP, 
+             y = R.L)) +
+  geom_point(aes(x = R.ANPP, 
+                 y = R.L, 
+                 shape = Whittaker_biome)) +
+      #scale_color_manual(name = "Whittaker biome",
+      #              breaks = names(Ricklefs_colors),
+      #              labels = names(Ricklefs_colors),
+      #              values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              color = "#666666") + 
+   stat_regline_equation(aes(label = ..rr.label..), label.x = .003, label.y = .9) +
+  ylab("R/L") +
+  xlab("R/ANPP") +
+  theme_bw() +
+    theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+
+RANPP_plot
+makePNG(fig = RANPP_plot, path_to_output.x = "~/cloud/gdrive/review_paper/ReviewPaperRound4/SI/",file_name = "FigS1",height = 5, width = 7, units = "in", res = 500)
+#ggsave(RANPP_plot, device = "png", filename = "~/Desktop/Tansley_review/FigureS1.png", width = 7, height = 5 )
+```
+
+
+
+Set up whittaker base plot
+```{r}
+base <- ggplot() +
+  # add biome polygons
+  geom_polygon(data = Whittaker_biomes,
+               aes(x    = temp_c,
+                   y    = precip_cm,
+                   fill = biome),
+               # adjust polygon borders
+               colour = "gray98",
+               size   = 1) + 
+               xlab("Mean annual temperature (°C)") + 
+               ylab("Mean annual precipitation (cm)") +
+  theme_bw() +
+    scale_fill_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors)
+```
+
+
+Plot
+```{r}
+
+RL_plot<-  base + 
+  geom_point(data =Fig5b_df %>%
+               filter(MAP < 5000) %>% 
+               distinct(MAT, MAP, R.L, .keep_all = T),
+             aes(x = MAT, 
+                 y = (MAP / 10), #mm --> cm
+                 size = R.L), # DURATION), 
+                 shape = 21, 
+                 color = "gray95",
+                 fill = "black", 
+                 stroke = .5, 
+                 alpha = .30) +
+               theme_bw() + 
+           scale_radius(name = "R/L", breaks = c(.05, .1, .5, 1), range = c(2, 15)) +
+
+      guides(shape = guide_legend(override.aes = list(shape = c(1, 1),
+                                                  size = c(2, 2),
+                                                  stroke = c(1, 1),
+                                                  color = c("black", "black"),
+                                                  alpha= c(.4, .8))),
+             size = guide_legend(override.aes = list(color = "gray80"))) +
+  theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+
+RL_plot
+
+#ggsave(RL_plot, device = "png", filename = "~/Desktop/Tansley_review/Figure5_b.png", width = 7, height = 5 )
+```
+
+
+For legend pt. 2
+```{r}
+testdf <- tibble (MAP = c(100, rep(150, 2), rep(200, 3), rep(250, 4)),
+                  MAT = c(-10, rep(-10, 2), rep(-10, 3), rep(-10, 4)),
+                  RL = c(rep(.3, 10)))
+
+test2<- tibble(MAP = c(100, 150, 200, 250), 
+               MAT = c(rep(-15, 4)),
+               RL = rep(.3, 4),
+               alpha =  c("1", "2", "3", "\u2265 4"))
+
+test2$alpha <- factor(test2$alpha, levels = c("1", "2", "3", "\u2265 4"))
+
+Fig5b_legend<-  base + 
+  geom_point(data = testdf,
+             aes(x = MAT,
+                 y = MAP), #mm --> cm
+                 #size =RL), # DURATION),
+                 alpha = .3,  
+                 size = 3,
+                 shape = 21,
+                 color = "black",
+                 fill = "black",
+                 stroke = .5) +
+               theme_bw() +
+  scale_radius(name = "R/L", breaks = c(.05, .1, .5, 1), range = c(2, 15)) +
+    geom_point(data =test2,
+               aes(x=MAT,
+                   y=MAP, 
+                   alpha = alpha), 
+                   size = 3,
+                   shape = 21, 
+                 color = "black",
+                 fill = "black", 
+                 stroke = .5) +
+    labs(alpha = "N sites") +
+    theme_classic()
+
+Fig5b_legend
+
+# ggsave(Fig5b_legend, device = "png", filename = "~/Desktop/Posters&Papers/AGU_poster_2021/whittaker_nsites_legend.png", width = 7, height = 5 )
+
+```
+
+```{r}
+RL_RNPP_plot<- Fig5a_df %>% 
+  mutate(RL = (R / L)) %>%
+  ggplot(aes(x = R.NPP, 
+             y = RL)) +
+  geom_point(aes(x = R.NPP, 
+                 y = RL, 
+                 color = Whittaker_biome)) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              color = "#666666") + 
+   stat_regline_equation(aes(label = ..rr.label..),  label.x = .003, label.y = .75) +
+  ylab("R/L") +
+  xlab("R/NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+  
+
+RL_RNPP_plot
+
+```
+
+
+
+
+
+To use R / (R+L) rather than R / L:
+```{r}
+
+RRL_RNPP_plot<- Fig5a_df %>% 
+  mutate(RRL = (R / (R+L))) %>%
+  ggplot(aes(x = R.NPP, 
+             y = RRL)) +
+  geom_point(aes(x = R.NPP, 
+                 y = RRL, 
+                 color = as.factor(Whittaker_biome))) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              color = "#666666") + 
+   stat_regline_equation(aes(label = ..rr.label..),  label.x = .003, label.y = .55) +
+  ylab("R/(R+L)") +
+  xlab("R/NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+  
+
+RRL_RNPP_plot
+
+#ggsave(RRL_RNPP_plot, device = "png", filename = "~/Desktop/Tansley_review/Figure5_a.png", width = 7, height = 5 )
+```
+
+Might need to add to supplementary info: 
+plot of correlation between L and NPP
+```{r}
+
+title_size = 12
+
+L_NPP_plot<- Fig5a_df %>% 
+  drop_na(Whittaker_biome) %>% 
+  ggplot(aes(x = NPP, 
+             y = L)) +
+  geom_point(aes(x = NPP, 
+                 y = L, 
+                 shape = Whittaker_biome)) +
+      #scale_color_manual(name = "Whittaker biomes",
+      #              breaks = names(Ricklefs_colors),
+      #              labels = names(Ricklefs_colors),
+      #              values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              formula = y~ 0 + x,
+              color = "#666666") + 
+   stat_regline_equation(aes(label = ..rr.label..),  label.x = 400, label.y = 600) +
+  ylab("L") +
+  xlab("NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") )
+                     #legend.text = element_text (size = axis_size),
+                     #legend.spacing.x = unit(0.3, 'cm'),
+                     #legend.spacing.y = unit(0.3, 'cm'), #this changes the spacing between groups of legend symbols
+                     #legend.key.size = unit(0.9, "cm"))
+  
+
+L_NPP_plot
+
+makePNG(fig = L_NPP_plot, path_to_output.x = "~/cloud/gdrive/review_paper/ReviewPaperRound4/SI/",file_name = "FigS2",height = 5, width = 7, units = "in", res = 500)
+
+
+
+```
+L vs NPP by biome
+```{r}
+Fig5a_df %>% filter(!is.na(Whittaker_biome)) %>% filter(!is.na(NPP))
+
+LNPP_by_biome <-  Fig5a_df %>% 
+  filter(!is.na(Whittaker_biome)) %>%
+  mutate(Whittaker_biome = as.factor(Whittaker_biome)) %>% 
+  ggplot(aes(x = NPP, 
+             y = L, 
+             color = Whittaker_biome)) +
+  geom_point() +
+    #aes(x = NPP, 
+    #             y = L, 
+    #             color = Whittaker_biome)) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              formula = y~ 0 + x)  +
+  stat_regline_equation(aes(label = ..rr.label..),  label.x = rep(0, 4), label.y = c(600, 600-30, 600-60, 600-90)) +
+  ylab("L") +
+  xlab("NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+  # ylim(0, 600) +
+  # xlim(0, 2000)
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") ) 
+#+
+#  facet_wrap(~Whittaker_biome)
+   
+LNPP_by_biome
+```
+Facet by biome 
+```{r}
+#Fig5a_df %>% filter(!is.na(Whittaker_biome)) %>% filter(!is.na(NPP))
+
+LNPP_by_biome_2 <-  Fig5a_df %>% 
+  filter(!is.na(Whittaker_biome)) %>%
+  mutate(Whittaker_biome = as.factor(Whittaker_biome)) %>% 
+  ggplot(aes(x = NPP, 
+             y = L, 
+             color = Whittaker_biome)) +
+  geom_point() +
+    #aes(x = NPP, 
+    #             y = L, 
+    #             color = Whittaker_biome)) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) +
+  geom_smooth(method = "lm",
+              formula = y~ 0 + x)  +
+ # stat_regline_equation(aes(label = ..rr.label..),  label.x = rep(0, 4), label.y = c(600, 600-30, 600-60, 600-90)) +
+  ylab("L") +
+  xlab("NPP") +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+  # ylim(0, 600) +
+  # xlim(0, 2000)
+   theme(plot.title = element_text(hjust = 0.5, size = title_size),
+                     strip.text.x = element_text(size = axis_size),
+                     #legend.title = element_blank (),
+                     axis.title.x = element_text (size = axis_size), # change the axis title
+                     axis.title.y = element_text (size = axis_size),
+                     axis.title.y.right = element_text (size = axis_size, color = "blue"),
+                     axis.text.x = element_text (size = axis_size, colour = "black"),
+                     axis.text.y = element_text (size = axis_size, colour = "black") ) +
+  facet_wrap(~Whittaker_biome)
+
+LNPP_by_biome_2
+```
+
+
+
+L_NPP  & biome-level regressions
+```{r}
+ggarrange(L_NPP_plot, LNPP_by_biome, common.legend = T, legend = "right") %>% 
+  ggsave(file =  "~/Desktop/NGEE-Tropics/Repro_metadata_synthesis/L_NPP_test.png", width = 12, height = 5, units = "in", device = "png")
+```
+
+```{r}
+Fig5a_df %>% 
+  filter(!is.na(Whittaker_biome)) %>%
+  mutate(Whittaker_biome = as.factor(Whittaker_biome)) %>% 
+  ggplot(aes(x = L/NPP, 
+             y = Whittaker_biome, 
+             color = Whittaker_biome)) +
+  geom_point() +
+    #aes(x = NPP, 
+    #             y = L, 
+    #             color = Whittaker_biome)) +
+      scale_color_manual(name = "Whittaker biomes",
+                    breaks = names(Ricklefs_colors),
+                    labels = names(Ricklefs_colors),
+                    values = Ricklefs_colors) 
+
+```
+
+
+```{r}
+data = Fig5a_df %>% 
+  mutate(Whittaker_biome = as.factor(Whittaker_biome))
+glm1 <- glm(R.NPP ~ R.L + Whittaker_biome, data = data)
+summary(glm1)
+```
+
+
+
+```{r}
+
+
+
+test <- TableS2 %>% 
+  mutate(Reference = Litterfall_sampling_interval) %>% 
+  filter(!str_detect(Reference, ",")) %>% 
+  rowwise() %>% 
+  mutate(start = strsplit(Reference,"-")[[1]][1], 
+         end = strsplit(Reference,"-")[[1]][2]) %>% 
+  select(Site, Subsite, start, end, Reference, Whittaker_biome, MASL, R.L, R, L) %>% 
+  distinct(Site, Subsite, start, end, Whittaker_biome, MASL, R.L, R, L) %>% 
+  filter(!is.na(start) & !is.na(end)) %>% 
+  pivot_longer(cols = c(start, end), names_to = "yr_type", values_to = "yr")  
+
+
+
+test %>% 
+  ggplot() + 
+  # geom_point(aes(y = Site, 
+  #                x = yr, 
+  #                color = yr_type)) +
+  geom_line(aes(y = Subsite, 
+             x =  yr, 
+             group = Subsite, 
+             color = Whittaker_biome
+            )) +
+  facet_wrap(~ as_factor(Whittaker_biome))
+
+
+
+test %>% 
+  filter(yr_type == "start" & yr > 1980) %>% 
+  mutate(yr = floor(as.numeric(yr))) %>% 
+  ggplot() + 
+  geom_point(aes(x =MASL,
+                 y = (R/ (R + L) ))) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~Whittaker_biome)
+```
+
+Let's look at n in each group 
+```{r}
+biomes_2_test <- c("Woodland/shrubland", "Tropical seasonal forest/savanna") # "Woodland/shrubland") #,  "Tropical seasonal forest/savanna")
+
+TableS2 %>% 
+ # filter(!is.na(NPP)) %>% 
+  count(Whittaker_biome)
+
+TableS2 %>% 
+  mutate(Whittaker_biome = as.factor(Whittaker_biome)) %>% 
+ # group_by(Whittaker_biome) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = Whittaker_biome, 
+                     y = R.L)) + 
+  theme(axis.text.x = element_text(angle = 90))
+
+# so to start we could ask if temp & tropical are diff 
+
+test <- TableS2 %>% 
+  #filter(!is.na(NPP))  %>% 
+  #filter(Whittaker_biome == "Temperate seasonal forest" | Whittaker_biome ==  "Tropical seasonal forest/savanna") %>% 
+  mutate(Whittaker_biome = as.factor(Whittaker_biome)) %>% 
+  filter(Whittaker_biome %in% biomes_2_test)
+
+
+test$Whittaker_biome
+  
+hist(TableS2$R.L, breaks = 40)
+med_RL <- as.numeric(median(test$R.L))
+
+wil_result <- wilcox.test(TableS2$R.L, mu = med_RL)
+
+one.way <- aov(R.L ~ Whittaker_biome , data = test)
+
+summary(one.way)
+
+
+```
+
+Testing variance diff
+```{r}
+var.test(R.L ~ Whittaker_biome, test, alternative = "two.sided")
+```
+
+
+

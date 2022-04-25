@@ -1,3 +1,5 @@
+
+#testing
 getFilePaths <- function(base_data_path = data_path, case_name){
   path <- paste0(data_path,'/',case_name,'/')
   fileNames <- list.files(path,pattern = '.nc')
@@ -113,10 +115,19 @@ getSiteVar <- function(file,varName){ #input are netcdf files
   nc <- nc_open(file)
   r <- ncvar_get(nc,varName)
   if(length(r) > 1){r <- sum(r)}
+  #if(length(r) > 1){r <- sum(tail(r,3))} #temporary change
   nc_close(nc)
   return(r) #returns variable value of interest
 }
 
+
+getMultiDimSiteVar <- function(file,varName){ #input are netcdf files
+  nc <- nc_open(file)
+  r <- ncvar_get(nc,varName)
+  #if(length(r) > 1){r <- sum(tail(r,3))} #temporary change
+  nc_close(nc)
+  return(r) #returns variable value of interest
+}
 
 getDateFromNC <- function(file){
   return(ymd(getSiteVar(file,"mcdate")))

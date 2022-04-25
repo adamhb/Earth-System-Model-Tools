@@ -1,0 +1,23 @@
+var,units,notes
+FATES_NPP_PF,kg m-2 s-1,
+FATES_RECRUITMENT_PF,N m-2 yr-1,
+FATES_NPLANT_PF,N m-2,
+FATES_PATCHAREA_AP,m2 m-2,
+FATES_MORTALITY_PF,N m-2 yr-1,
+FATES_NPATCHES,N,
+FATES_NCOHORTS,N,
+FATES_VEGC_PF,kg m-2,total PFT-level biomass in kg of carbon per land area
+FATES_MORTALITY_CANOPY_SZAP,N m-2 yr-1,
+FATES_MORTALITY_USTORY_SZAP,N m-2 yr-1,
+FATES_SEED_BANK_TRS,kg m-2,total seed mass of all PFTs in kg carbon per m2 land area
+FATES_SEEDLING_POOL_TRS,kg m-2,total seedling mass of all PFTs in kg carbon per m2 land area
+FATES_PARPROF_DIR_CLLL,W m-2,radiative profile of direct PAR through each canopy
+FATES_PARPROF_DIF_CLLL,W m-2,radiative profile of diffuse PAR through each canopy
+FATES_LAISUN_Z_CLLL,m2 m-2,LAI in the sun by each canopy and leaf layer
+FATES_LAISHA_Z_CLLL,m2 m-2,LAI in the shade by each canopy and leaf layer
+FATES_DDBH_CANOPY_SZAP,m m-2 yr-1,growth rate of canopy plants in meters DBH per m2 per year in canopy in each size x age class
+FATES_DDBH_USTORY_SZAP,m m-2 yr-1,growth rate of understory plants in meters DBH per m2 per year in each size x age class
+FATES_SEED_PROD_USTORY_SZ,kg m-2 s-1,seed production of understory plants by size class in kg carbon per m2 per second
+FATES_SEED_PROD_CANOPY_SZ,kg m-2 s-1,seed production of canopy plants by size class in kg carbon per m2 per second
+FATES_SEEDS_IN,kg m-2 s-1,total seed production rate in kg carbon per m2 second (includes external seed rain)
+FATES_SEEDS_IN_LOCAL,kg m-2 s-1,local seed production rate in kg carbon per m2 second

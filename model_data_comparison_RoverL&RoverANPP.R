@@ -1,14 +1,17 @@
 
 #This script takes data from multiple model simulations and compares it with observations
 from_new_data <- F
-ANPP_df <- read_csv('data/ANPP_ests_BCI_Luquillo.csv')
 
-bci_ANPP <- ANPP_df %>% filter(Site == 'BCI') %>% pull(ANPP) %>% `/`(2) #dividing by 2 to convert biomass to carbon 
 
 #load packages
 library(tidyverse)
 library(ncdf4)
 library(lubridate)
+
+
+ANPP_df <- read_csv('data/ANPP_ests_BCI_Luquillo.csv')
+
+bci_ANPP <- ANPP_df %>% filter(Site == 'BCI') %>% pull(ANPP) %>% `/`(2) #dividing by 2 to convert biomass to carbon 
 
 #load supporting functions
 source('utils/supporting_funcs_esm_tools.R')
@@ -40,7 +43,7 @@ RoANPP_BCI_obs <- read_csv("data/RoverL_BCI_obs.csv") %>%
 
 #load recruitment obs
 recruitmentBCIobs <-  read_csv("data/Recruitment_BCI_obs.csv") %>%
-  filter(simYr %in% c(6,7)) %>%
+  filter(simYr %in% c(6,7)) %>% #filtering to get just the 2005-2010 and 2010-2015 intervals
   group_by(case) %>% summarise(Mvalue = mean(value), sd = sd(value)) %>%
   rename(value = Mvalue) %>%
   mutate(var = "RECRUITMENT") %>%
@@ -82,7 +85,7 @@ RA_values <- c(0.009, 0.079, 0.149, 0.219, 0.289, 0.359, 0.43)
 
 cases <- c()
 for(c in RA_values){
-  cases <- append(cases,paste0('bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis',c))
+  cases <- append(cases,paste0('bci-1pft-fates-main-from-inventory.Ccd4bc7aba-Fa0568083.2021-09-29_RAis',c,'HgtMinIs2.55'))
 }
 
 case_aliases <- c()
@@ -91,7 +94,7 @@ for (c in RA_values){
 }
 
 
-ModelDataComparisonVars <- c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','RECRUITMENT','NPP_FNRT_SCPF', 'NPP_BGSW_SCPF','NPP_BGDW_SCPF')
+ModelDataComparisonVars <- c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','RECRUITMENT','NPP_FNRT_SCPF', 'NPP_BGSW_SCPF','NPP_BGDW_SCPF','DDBH_CANOPY_SCPF','DDBH_UNDERSTORY_SCPF')
 
 #put all model data into a data frame
 if(from_new_data == T){
@@ -105,15 +108,18 @@ if(from_new_data == T){
     c_data <- c_data %>% mutate(ANPP = NPP - (NPP_FNRT_SCPF + NPP_BGSW_SCPF + NPP_BGDW_SCPF)) %>% add_column(case = case_aliases[j])
     model_data <- rbind(model_data,c_data)
   }
-  write_csv(model_data,"data/model_predictions_varying_RA")
+  write_csv(model_data,"data/model_predictions_varying_RA.csv")
 }
 
-model_data <- read_csv("data/model_predictions_varying_RA")
+model_data <- read_csv("data/model_predictions_varying_RA.csv")
 
 #calculate annual means of R/L and R/ANPP by case
+
+
+
 modelPredictionsBCI <- model_data %>% filter(date > as.Date("1907-01-01")) %>%
   mutate(RoL = SEEDS_IN_LOCAL_ELEM / LEAF_LITTER_IN,
-         RoANPP = SEEDS_IN_LOCAL_ELEM / ANPP) %>%
+         RoANPP = SEEDS_IN_LOCAL_ELEM / ANPP) %>% 
   mutate_at(.vars = "RECRUITMENT",.funs = function(x){x * days_per_yr * m2_per_ha}) %>% #converting recruitment to ind. per ha per year
   select(simYr,date,RoL,RoANPP,RECRUITMENT,case) %>%
   toLongForm(vars = c('RoL','RoANPP',"RECRUITMENT")) %>%
@@ -134,6 +140,8 @@ modelPredictionsBCI <- model_data %>% filter(date > as.Date("1907-01-01")) %>%
             sd = sd(value,na.rm = T)) %>%
   mutate(RA = as.numeric(substr(case,4,8))) %>%
   rename(value = Mvalue)
+
+
 
 
 
@@ -185,18 +193,19 @@ modelDataComp_RoANPP <- modelPredictionsBCI %>%
 
 modelDataComp_Recruitment <- modelPredictionsBCI %>%
   filter(var == "RECRUITMENT") %>%
-  ggplot(aes(case,value*0.19878,color = RA)) +
+  #ggplot(aes(case,value*0.19878,color = RA)) +
+  ggplot(aes(case,value,color = RA)) +
   geom_point(size = 7) +
-  geom_errorbar(aes(ymin = value*0.19878-sd*0.19878,ymax = value*0.19878+sd*0.19878, width = 0)) +
+  geom_errorbar(aes(ymin = value - sd, ymax = value + sd, width = 0)) +
   geom_point(data = BCI_obs %>% filter(var == "RECRUITMENT"), 
              mapping = aes(case,value), color ="black", shape = 2, size = 5, stroke = 2) +
   geom_errorbar(data = BCI_obs %>% filter(var == "RECRUITMENT"), 
                 mapping = aes(ymin = value-sd,ymax = value+sd, width = 0), color = "black") +
   scale_color_continuous() +
   rec.y.axis +
-  scale_y_log10(breaks = c(100,1000,10000),
-                labels = c(100,1000,10000),
-                limits = c(50,10000)) +
+  scale_y_log10(breaks =lseq(10,6000,5),
+                labels = lseq(10,6000,5),
+                limits = c(10,6000)) +
   labs(title = "Recruitment") +
   adams_theme +
   theme(axis.title.x=element_blank(), 
@@ -211,7 +220,15 @@ BCI_model_data_comp_fig <- plot_grid(modelDataComp_RoL,modelDataComp_RoANPP,
           label_fontface = "bold", label_x = 0, label_size = 25)
 
 
-makePNG(BCI_model_data_comp_fig,"figures/","BCI_model_data_comp_fig",width = 11,height = 4)
+ggsave(filename = "~/cloud/gdrive/review_paper/ReviewPaperRound4/ToSubmit/figs_to_submit/Fig6/Fig6_3_6_2022.eps", dpi = 600, device = "eps", width = 11, height = 4)
+
+setEPS()
+postscript(file = "~/cloud/gdrive/review_paper/ReviewPaperRound4/ToSubmit/figs_to_submit/Fig6/Fig6.eps", width = 11, height = 4)
+BCI_model_data_comp_fig
+dev.off()
+BCI_model_data_comp_fig 
+
+#makePNG(BCI_model_data_comp_fig,"figures/","BCI_model_data_comp_fig",width = 11,height = 4)
 
 
 

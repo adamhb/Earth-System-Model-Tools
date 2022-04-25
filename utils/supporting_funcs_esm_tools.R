@@ -9,9 +9,16 @@ sec_per_day <- 60*60*24
 
 #Units map of the units of each variable
 varUnitsMapFates <- tibble(
-  var = c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','AGB','RECRUITMENT','PFTbiomass','PFTnindivs','PFTnpp','NPP_FNRT_SCPF', 'NPP_BGSW_SCPF','NPP_BGDW_SCPF'),
-  units = c(' kg ha-1 d-1 ',' g m-2 s-1 ',' g m-2 s-1 ',' g m-2 ',' indiv ha-1 yr-1 ',' g m-2 ',' indiv m-2 ',' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ')
+  var = c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','AGB','RECRUITMENT','PFTbiomass','PFTnindivs','PFTnpp','NPP_FNRT_SCPF', 'NPP_BGSW_SCPF','NPP_BGDW_SCPF','DDBH_CANOPY_SCPF','DDBH_UNDERSTORY_SCPF','PFTnindivs'),
+  units = c(' kg ha-1 d-1 ',' g m-2 s-1 ',' g m-2 s-1 ',' g m-2 ',' indiv ha-1 yr-1 ',' g m-2 ',' indiv m-2 ',' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' kg m-2 yr-1 ', ' cm ha-1 yr-1 ', ' cm ha-1 yr-1 ',' indiv m-2 ')
 )
+
+# varUnitsMapFates <- tibble(var = c('FATES_NPP_PF','FATES_RECRUITMENT_PF','FATES_NPLANT_PF','FATES_PATCHAREA_AP','FATES_MORTALITY_PF','FATES_NPATCHES','FATES_NCOHORTS','FATES_VEGC_PF','FATES_MORTALITY_CANOPY_SZAP','FATES_MORTALITY_USTORY_SZAP','FATES_SEED_BANK_TRS','FATES_SEEDLING_POOL_TRS','FATES_PARPROF_DIR_CLLL','FATES_PARPROF_DIF_CLLL','FATES_LAISUN_Z_CLLL','FATES_LAISHA_Z_CLLL','FATES_DDBH_CANOPY_SZAP','FATES_DDBH_USTORY_SZAP','FATES_SEED_PROD_USTORY_SZ','FATES_SEED_PROD_CANOPY_SZ','FATES_SEEDS_IN','FATES_SEEDS_IN_LOCAL'),
+#                            units = rep(0,length(vars)))
+# 
+
+#varUnitsMapFates <- read_csv('data/varUnitsMapFates.csv') %>% select(-notes)
+
 
 FatesPrettyNamesMap <- tibble(
   var = c('SEEDS_IN_LOCAL_ELEM','LEAF_LITTER_IN','NPP','AGB','RECRUITMENT','PFTbiomass','PFTnindivs','PFTnpp','ANPP'),

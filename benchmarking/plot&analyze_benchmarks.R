@@ -102,7 +102,7 @@ RoL_obs_fig <- RoLandRoANPP_obs %>%
   ggplot(aes(site,value)) +
   geom_point(shape = 2, size = 5, stroke = 2) +
   geom_errorbar(aes(ymin = value-se,ymax = value+se, width = 0)) +
-  ylab(expression(paste('R / L', ' [g m'^'-2','yr'^'-1',"]"))) +
+  ylab(expression('R / L')) +
   xlab(bquote('Site')) +
   scale_y_continuous(limits = c(0,0.7), breaks = seq(from = 0, to = 0.7, by = 0.1)) +
   scale_x_discrete(labels = c('bci\nn = 5','luq\nn = 17','scbi\nn = 5','serc\nn = 5')) +
@@ -114,7 +114,7 @@ RoANPP_obs_fig <- RoLandRoANPP_obs %>%
   ggplot(aes(site,value)) +
   geom_point(shape = 2, size = 5, stroke = 2) +
   geom_errorbar(aes(ymin = value-se,ymax = value+se, width = 0)) +
-  ylab(expression(paste('R / ANPP', ' [g m'^'-2','yr'^'-1',"]"))) +
+  ylab(expression('R / ANPP')) +
   xlab(bquote('Site')) +
   scale_y_continuous(limits = c(0,0.15)) +
   scale_x_discrete(labels = c('bci\nn = [5,1]','luq\nn = [1,1]')) +
@@ -122,9 +122,16 @@ RoANPP_obs_fig <- RoLandRoANPP_obs %>%
 
 
 RoLandRoANPPfig <- plot_grid(RoL_obs_fig,RoANPP_obs_fig, rel_widths = c(1.3,1), labels = c("(a)","(b)"),
-          label_fontface = "bold", label_x = 0, label_size = 18)
+          label_fontface = "bold", label_x = -0.025, label_size = 18)
 
 makePNG(RoLandRoANPPfig,'figures/',file_name = 'RoLandRoANPP_obs_fig',height = 5, width = 8.5)
+
+
+
+
+
+
+
 
 #plot R over ANPP
 rbind(RoANPP_BCI_obs, RoL_BCI_obs, RoL_LUQ_obs,RoLSCBIandSERC) %>%

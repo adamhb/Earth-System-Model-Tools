@@ -35,6 +35,9 @@ psi_crit <- -175912.9
 window_vector <- 126
 window_ema <- 126
 
+ED2_data$smp <- ED2_data$smp
+
+
 ED2_mdds_ema <- mdd_ema(ED2_data$smp,window_ema,psi_crit,1)
 
 ED2_data %>%
@@ -65,4 +68,41 @@ ggplot(data = FATES_rMeans,
 
 
 #A factor of 3/7 seems to get the ema to match the regular moving average, but this needs more testing
+
+
+#looking at running means of smp
+
+
+ED2_rMeans_smp <- getRunningMeans(ED2_data, "smp", ema_window = 7, ma_window = 14)
+
+ggplot(data = ED2_rMeans_smp, 
+       mapping = aes(index,smp)) +
+  geom_line() +
+  geom_line(data = ED2_rMeans_smp, mapping = aes(index,rMean), color = "red") +
+  geom_line(data = ED2_rMeans_smp, mapping = aes(index,ema), color = "blue") +
+  scale_x_continuous(limits = c(0,100)) +
+  theme_minimal()
+
+
+#looking at running means of light for seedling mortality
+ED2_rMeans_light_mort <- getRunningMeans(ED2_data, "sr", ma_window = 64, ema_window = 32)
+
+
+
+ggplot(data = ED2_rMeans_light_mort, 
+       mapping = aes(index,sr)) +
+  geom_line() +
+  geom_line(data = ED2_rMeans_light_mort, mapping = aes(index,rMean), color = "red") +
+  geom_line(data = ED2_rMeans_light_mort, mapping = aes(index,ema), color = "blue") +
+  scale_x_continuous(limits = c(0,2000)) +
+  theme_minimal()
+
+
+
+
+
+
+
+
+
 

@@ -134,10 +134,13 @@ vitalRates_allSites <- rbind(luqVitalRates,bciVitalRates,scbiVitalRates,sercVita
 write_csv(vitalRates_allSites,"data/vital_rates_all_sites.csv")
 write_csv(vitalRates_allSites,"data/Table_S4.csv")
 
-
+#vitalRates_allSites <- read_csv("data/Table_S4_v2.csv")
 #extract data just for bci to compare to model simulations
+#loading the list of understory specialists at BCI to exclude them
+understorySpecialists <- read_csv("data/understory_greater_than_20cm.csv") %>% pull(sp)
+
 vitalRates_allSites %>%
-  filter(site == "bci") %>%
+  filter(site == "bci", !sp %in% understorySpecialists) %>%
   group_by(site, cen_interval) %>%
   summarise(R_ha_yr = sum(R_t1,na.rm = T) * m2_per_ha, #the sum of all species area-based recruitment rates
             M_ha_yr = sum(M_t1,na.rm = T) * m2_per_ha) %>% #the sum of all species area-based mortality rates
