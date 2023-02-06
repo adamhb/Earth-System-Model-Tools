@@ -73,5 +73,5 @@ def plot_array(xarr,xds,n_pfts,conversion,title,ylabel,output_path,subplots = Fa
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.6,wspace=0.6)
 
-    plt.savefig(output_path + "/" + title.replace(" ","") + ".png")
+    plt.savefig(output_path + "/" + title.replace(" ","") + ".pdf")
 

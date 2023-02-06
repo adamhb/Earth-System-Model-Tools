@@ -14,6 +14,8 @@ import myfuncs
 import warnings
 from tabulate import tabulate
 from myparams import *
+from PyPDF2 import PdfMerger
+
 
 warnings.filterwarnings("ignore")
 
@@ -21,15 +23,16 @@ def arg_func(argv):
     arg_input = ""
     arg_output = ""
     arg_user = ""
-    arg_help = "{0} -c <case-name> -start <start year> -end <end year>".format(argv[0])
+    arg_help = "{0} -c <case-name> -s <start year> -e <end year>".format(argv[0])
     
     try:
-        opts, args = getopt.getopt(argv[1:], "hc:s:e:iv", ["help", "case-name=","start=", 
-        "end=","verbose"])
+        opts, args = getopt.getopt(argv[1:], "hc:s:e:ivp", ["help", "case-name=","start=", 
+        "end=","verbose","pft-names"])
     except:
         print(arg_help)
         sys.exit(2)
     
+   
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -41,16 +44,22 @@ def arg_func(argv):
             arg_start_year = arg
         elif opt in ("-e", "--end"):
             arg_end_year = arg
+
+    for opt, arg in opts:
+        if opt in ("-p", "--pft-names"):
+            use_custom_pft_names = True
+        else:
+            use_custom_pft_names = False
     
     for opt, arg in opts:
-       if opt in ("-v","--verbose"):
+        if opt in ("-v","--verbose"):
            
            print('case-name:', arg_case_name)
            print('start-year', arg_start_year)
            print('end-year:', arg_end_year)
     #print("\n".join(getFullFilePaths(arg_case_name)))
 
-    arg_out = (arg_case_name,arg_start_year,arg_end_year)
+    arg_out = (arg_case_name,arg_start_year,arg_end_year,use_custom_pft_names)
     return(arg_out)
 
 
@@ -62,7 +71,7 @@ if __name__ == "__main__":
     original_stdout = sys.stdout
 
     #parse the arguments
-    arg_case_name,arg_start_year,arg_end_year = arg_func(sys.argv)
+    arg_case_name,arg_start_year,arg_end_year,use_custom_pft_names = arg_func(sys.argv)
     
     #define paths to netcdf files
     full_paths = myfuncs.getFullFilePaths(arg_case_name,arg_start_year,arg_end_year)
@@ -80,6 +89,12 @@ if __name__ == "__main__":
    
     #get number of pfts
     n_pfts = len(ds.fates_levpft)
+
+    if use_custom_pft_names == True:
+        pft_names = pd.Series(pft_names).iloc[list(ds.fates_levpft.values - 1)]
+    else:
+        pft_names = list(range(n_pfts))
+    
 
     #Create output figures   
     print("Making figures...")
@@ -169,7 +184,31 @@ if __name__ == "__main__":
         
         sys.stdout = original_stdout
 
+    #merge pdfs
 
-    
+    files = os.listdir(output_path)
+
+    files = [os.path.join(output_path, f) for f in files]
+
+
+
+    pdfs = []
+
+    for f in files:
+        if f.endswith(".pdf"):
+                pdfs.append(f)
+
+
+    merger = PdfMerger()
+
+    for pdf in pdfs:
+        merger.append(pdf)
+
+    merger.write(output_path + '/' + "figs.pdf")
+    merger.close()
+
+
+    print("Finished!")
+    print("Output: ",output_path)
 
 
