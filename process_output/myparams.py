@@ -1,7 +1,8 @@
 #set path to data archive
 ##one level up from case name
 
-archive_path = '/glade/scratch/adamhb/archive'
+#archive_path = '/glade/scratch/adamhb/archive'
+archive_path = '/home/adam/cloud/gdrive/postdoc/simulation_output'
 
 #params
 n_ticks = 10
@@ -11,6 +12,7 @@ pft_names = ["pine","cedar","fir","shrub","oak"]
 fontsize = 12
 
 #constants
+MPa_per_mmh2o = 1e-5
 s_per_yr = 31536000
 s_per_day = 3600 * 24
 m2_per_ha = 1e4

@@ -33,6 +33,8 @@ fields = [
           #crown_area and height#
 	  #######################
           'FATES_CANOPYCROWNAREA_PF',
+          'FATES_CANOPYCROWNAREA_APPF',
+          'FATES_CROWNAREA_APPF',
           #'FATES_CANOPYAREA_HT',
           #'FATES_CROWNAREA_CLLL',
           'FATES_CROWNAREA_PF',

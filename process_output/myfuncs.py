@@ -105,6 +105,24 @@ def agefuel_to_age_by_fuel(agefuel_var, dataset):
     #ds_out.attrs['long_name'] = agefuel_var['long_name']
     #ds_out.attrs['units'] = agefuel_var['units']
 
+
+def appf_to_ap_by_pft(appf_var, dataset):
+    """function to reshape a fates multiplexed size and pft-indexed variable to one indexed by size class and pft
+    first argument should be an xarray DataArray that has the FATES SCPF dimension
+    second argument should be an xarray Dataset that has the FATES SCLS dimension 
+    (possibly the dataset encompassing the dataarray being transformed)
+    returns an Xarray DataArray with the size and pft dimensions disentangled"""
+    n_ap = len(dataset.fates_levage)
+    ds_out = (appf_var.rolling(fates_levagepft=n_ap, center=False)
+            .construct("fates_levage")
+            .isel(fates_levagepft=slice(n_ap-1, None, n_ap))
+            .rename({'fates_levagepft':'fates_levpft'})
+            .assign_coords({'fates_levage':dataset.fates_levage})
+            .assign_coords({'fates_levpft':dataset.fates_levpft}))
+    #ds_out.attrs['long_name'] = scpf_var.attrs['long_name']
+    #ds_out.attrs['units'] = scpf_var.attrs['units']
+    return(ds_out)
+
 def get_n_subplots(n_pfts): 
  
     if (n_pfts % 2 == 0) | (n_pfts == 1): 
@@ -135,15 +153,35 @@ def per_capita_rate(xarr,xds,unit_conversion):
     return(xarr_per_cap)
 
 
-def get_rate_table(arr_timeXpft, col_title, pft_names):
+def get_rate_table(xarr,xds,var_title,indices,index_title):
     
-    series = pd.DataFrame(arr_timeXpft.mean(axis = 0).values,
-                           index = pft_names).sort_values(by = 0, ascending=False).reset_index()
+    if xarr.dims == ('time', 'fates_levage'):
+        xarr = xarr.isel(time = slice(-12,-1))
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                     index=xds.fates_levage.values)
 
-    my_dict = {'pft':list(series.iloc[:,0]), col_title:list(series.iloc[:,1])}
-    my_df = pd.DataFrame.from_dict(my_dict).set_index('pft')
-    mort_tab = tabulate(my_df, headers='keys', tablefmt='psql')
-    return(mort_tab)
+    if xarr.dims == ('time', 'fates_levagepft'):
+        xarr = appf_to_ap_by_pft(xarr,xds)
+        xarr = xarr / xds.FATES_PATCHAREA_AP
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                     index = indices, columns=xds.fates_levage.values)
+        series.loc["Total"] = series.sum()
+        tab = tabulate(series, headers="keys", tablefmt="psql")
+        return(tab)
+
+    if xarr.dims == ('time', 'levgrnd'):
+        grnd_depths = xds.levgrnd.values[indices]
+        xarr = xarr.isel(levgrnd = indices).isel(time = slice(12,-1)) * MPa_per_mmh2o
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                          index = grnd_depths).sort_values(by = 0, ascending=True).reset_index()
+    else:
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                          index = indices).sort_values(by = 0, ascending=False).reset_index()
+    
+    my_dict = {index_title:list(series.iloc[:,0]), var_title:list(series.iloc[:,1])}
+    my_df = pd.DataFrame.from_dict(my_dict).set_index(index_title)
+    tab = tabulate(my_df, headers='keys', tablefmt='psql')
+    return(tab)
 
 def weighted_avg_par(par_stream,frac_in_canopy):
     par_z = (par_stream.isel(fates_levcnlf = 0) * frac_in_canopy) +\
