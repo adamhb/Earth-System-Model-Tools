@@ -27,7 +27,7 @@ def arg_func(argv):
     
     try:
         opts, args = getopt.getopt(argv[1:], "hc:s:e:d:ivp:", ["help", "case-name=","start=", 
-        "end=","dbh_min=","verbose","pft-names="])
+        "end=","dbh-min=","verbose","pft-names="])
     except:
         print(arg_help)
         sys.exit(2)
@@ -44,7 +44,7 @@ def arg_func(argv):
             arg_start_year = arg
         elif opt in ("-e", "--end"):
             arg_end_year = arg
-        elif opt in ("-d", "--dbh_min"):
+        elif opt in ("-d", "--dbh-min"):
             arg_dbh_min = arg
         elif opt in ("-p","--pft-names"):
             use_custom_pft_names = arg
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     viz.plot_array(aw_fi,ds,n_pfts,1,"01_FireLineIntensity","kW m-1",output_path)
 
     #get canopy crown area by patch age
-
-    canopy_crown_area_tab = myfuncs.get_rate_table(ds.FATES_CANOPYCROWNAREA_APPF,ds,"CCA",pft_names,"pft")
+    if 'FATES_CANOPYCROWNAREA_APPF' in hist.fields:
+        canopy_crown_area_tab = myfuncs.get_rate_table(ds.FATES_CANOPYCROWNAREA_APPF,ds,"CCA",pft_names,"pft")
 
     #plot disturbance rate
     viz.plot_array(ds.FATES_DISTURBANCE_RATE_FIRE,ds,n_pfts,1,"01_Disturbance Rate Fire","m2 m-2",output_path)
@@ -146,7 +146,10 @@ if __name__ == "__main__":
 
     #Canopy crown area
     viz.plot_array(ds.FATES_CANOPYCROWNAREA_PF,ds,n_pfts,1,"02_Canopy Crown Area",'[m2 m-2]', output_path)
-    viz.plot_appf(ds.FATES_CANOPYCROWNAREA_APPF, ds, n_pfts, "02_CCA by Age", "[m2 m2-1]", output_path)
+    
+    if 'FATES_CANOPYCROWNAREA_APPF' in hist.fields:
+
+        viz.plot_appf(ds.FATES_CANOPYCROWNAREA_APPF, ds, n_pfts, "02_CCA by Age", "[m2 m2-1]", output_path)
 
     #Crown area
     viz.plot_array(ds.FATES_CROWNAREA_PF,ds,n_pfts,1,"02_Crown Area",'[m2 m-2]', output_path)
@@ -210,8 +213,11 @@ if __name__ == "__main__":
         print(smp_tab)
         print(frac_in_canopy_tab)
         print(par_tab)
-        print("Canopy crown area by patch age")
-        print(canopy_crown_area_tab)
+        
+        if 'FATES_CANOPYCROWNAREA_APPF' in hist.fields:
+
+            print("Canopy crown area by patch age")
+            print(canopy_crown_area_tab)
         
 
         #Composition
