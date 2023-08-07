@@ -1,4 +1,11 @@
 .Rproj.user
+/data
+*.py[cod]
+__pycache__/
+__pycache__
+__pycache__*
+*.pyc
+.ipynb_checkpoints/
 .Rhistory
 .RData
 .Ruserdata
