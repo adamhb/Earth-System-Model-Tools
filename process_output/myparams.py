@@ -1,8 +1,8 @@
 #set path to data archive
 ##one level up from case name
 
-#archive_path = '/glade/scratch/adamhb/archive'
-archive_path = '/home/adam/cloud/gdrive/postdoc/simulation_output'
+archive_path = '/glade/scratch/adamhb/archive'
+#archive_path = '/home/adam/cloud/gdrive/postdoc/simulation_output'
 
 #params
 n_ticks = 10
