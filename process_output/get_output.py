@@ -119,7 +119,7 @@ if __name__ == "__main__":
     canopy_crown_area_tab = myfuncs.get_rate_table(ds.FATES_CANOPYCROWNAREA_APPF,ds,"CCA",pft_names,"pft")
 
     #plot disturbance rate
-    viz.plot_array(ds.FATES_DISTURBANCE_RATE_FIRE,ds,n_pfts,1,"01_Disturbance Rate Fire","m2 m-2",output_path)
+    viz.plot_array(ds.FATES_DISTURBANCE_RATE_FIRE,ds,n_pfts,1,"01_Disturbance Rate Fire","m2 m-2 yr-1",output_path)
     mean_dist_rate_fire = np.nanmean(ds.FATES_DISTURBANCE_RATE_FIRE.values)
 
     #plot changes in patch age
