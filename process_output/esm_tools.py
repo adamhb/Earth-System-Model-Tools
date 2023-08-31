@@ -93,6 +93,14 @@ def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "mont
     return inst_files
 
 
+
+def create_directory(directory_path):
+    try:
+        os.mkdir(directory_path)
+        print(f"Directory '{directory_path}' created successfully!")
+    except FileExistsError:
+        print(f"Directory '{directory_path}' already exists!")
+
 ###################################
 # Import netcdf files into xarray #
 ###################################
@@ -225,12 +233,19 @@ def get_n_failed_pfts(arr,ba_thresh=0.1):
     return failed.astype(int).sum()
 
 
-def get_total_stem_den(ds,trees_only=True):
+def get_total_stem_den(ds,trees_only=True, dbh_min=None):
     
     '''This function returns a time-averaged value for
     stem density [N ha-1] with the option to exclude shrubs (pft 4)'''
-    
-    den = ds.FATES_NPLANT_PF.mean(dim = "time")
+    den = scpf_to_scls_by_pft(ds.FATES_NPLANT_SZPF, ds)
+
+    den = den.mean(dim = "time")
+
+    if dbh_min != None:
+        den = den.sel(fates_levscls = slice(dbh_min,None)).sum(dim = "fates_levscls")
+    else:
+        den = den.sum(dim = "fates_levscls")
+
     den_total = den.sum(dim="fates_levpft")
     
     if trees_only == False:
@@ -259,3 +274,50 @@ def get_total_npp(ds):
     '''Returns NPP [kg m-2 yr-1]'''
     npp_total = ds.FATES_NPP_PF.sum(dim="fates_levpft").mean(dim = "time").values * s_per_yr
     return npp_total
+
+
+################
+# Making plots #
+################
+
+def plot_multi_panel(df, x_col, y_cols, figsize=(6, 8)):
+    """
+    Plots multiple y-columns against one x-column in a multi-panel figure.
+    
+    Args:
+    - df (pd.DataFrame): DataFrame containing the data.
+    - x_col (str): Name of the column for the x-axis.
+    - y_cols (list of str): List of column names for the y-axes.
+    - figsize (tuple, optional): Figure size. Defaults to (6, 8).
+    """
+    # Create subplots
+    fig, axs = plt.subplots(nrows=len(y_cols), figsize=figsize, sharex=True)
+    
+    # If only one y_col is provided, axs is not a list; make it one for consistent indexing
+    if len(y_cols) == 1:
+        axs = [axs]
+    
+    # Plot each y_col
+    for i, ycol in enumerate(y_cols):
+        axs[i].scatter(df[x_col], df[ycol], label=ycol)
+        axs[i].legend(loc='upper right')
+        axs[i].set_ylabel(ycol)
+    
+    axs[-1].set_xlabel(x_col)
+    plt.tight_layout()
+    plt.show()
+
+
+##########
+# Output #
+##########
+
+def store_output(case_name,case_output_df,processed_output_root,makeFig = True):
+    output_path_for_case = os.path.join(processed_output_root,case_name)
+    create_directory(output_path_for_case)
+    df_file_name = "ensemble_output_" + case_name + ".csv"
+    case_output_df.to_csv(os.path.join(output_path_for_case,df_file_name))
+    
+    if makeFig == True:
+        fig_file_name = "ensemble_fig_" + case_name + ".png"
+        plt.savefig(os.path.join(output_path_for_case,fig_file_name))
