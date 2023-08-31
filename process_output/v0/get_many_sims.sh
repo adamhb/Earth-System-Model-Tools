@@ -1,6 +1,12 @@
 #!/bin/bash
 
 
+# The get_output.py script creates a directory in the archive root dir
+# called processed_output{case_name} and puts the processed output there.
+# The lines of code commented out below seek to tar the processed output
+# up and transfer back to the location where this script is run. That functionality
+# is still under development.
+
 start_year=1901
 end_year=1970
 

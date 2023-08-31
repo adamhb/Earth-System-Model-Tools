@@ -1,4 +1,7 @@
 #!/bin/bash
+# This script tars the processed output and bring it back to
+# the location where the script is run
+
 
 folder_name=$1
 folder_path=/glade/scratch/adamhb/archive/$1
