@@ -42,6 +42,7 @@ def get_path_to_sim(case_name,case_output_root,suffix = 'lnd/hist'):
 
 def extract_digits(filename):
     '''Extracts the 4-digit instance tag from a land model output netcdf file'''
+    
     match = re.search(r'_(\d{4})\.', filename)
     if match:
         return match.group(1)
@@ -49,7 +50,8 @@ def extract_digits(filename):
 
 def get_unique_inst_tags(full_case_path):
     '''Return unique list of instance tags for a case'''
-    files = os.listdir(full_case_path)
+    substring = ".h0."
+    files = find_files_with_substring(full_case_path, substring)
     inst_tags = np.unique(np.array([extract_digits(f) for f in files]))
     return inst_tags
 
@@ -75,7 +77,7 @@ def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "mont
     '''Returns files from the last n years (param: last_n_years)
     of a simulation (param: full_case_path) belonging to a specific ensemble member (param: inst_tag)'''
     
-    substring = "clm2_" + inst_tag
+    substring = "clm2_" + inst_tag + ".h0"
     
     # Get the instance files
     files = find_files_with_substring(full_case_path, substring)
@@ -144,6 +146,8 @@ def extract_variable_from_netcdf(file_path, variable_name,pft_index):
         # Check if the variable exists in the dataset
         if variable_name in dataset.variables:
             variable_data = dataset.variables[variable_name][:]
+            if len(variable_data.shape) > 1:
+                variable_data = variable_data[0,:]
             return variable_data.data[pft_index]
         else:
             raise ValueError(f"'{variable_name}' not found in the NetCDF file.")
