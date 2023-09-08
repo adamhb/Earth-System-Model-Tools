@@ -188,7 +188,6 @@ def weighted_avg_par(par_stream,frac_in_canopy):
     (par_stream.isel(fates_levcnlf = 30) * (1 - frac_in_canopy))
     return(par_z)
 
-
 def frac_in_canopy(xds):
     return(xds.FATES_CANOPYCROWNAREA_PF / xds.FATES_CROWNAREA_PF)
 
