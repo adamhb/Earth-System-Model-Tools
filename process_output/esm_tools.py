@@ -103,6 +103,9 @@ def create_directory(directory_path):
     except FileExistsError:
         print(f"Directory '{directory_path}' already exists!")
 
+def fancy_index(x,indices):
+    return np.array(x)[np.array(indices)]
+
 ###################################
 # Import netcdf files into xarray #
 ###################################
@@ -130,6 +133,49 @@ def multiple_netcdf_to_xarray(full_paths, fields):
 
     
     return(ds)
+
+
+def load_fates_output_data(model_output_root, case_name, years, fields,
+                           inst_tag = None, manual_path = None, save_processed_output = False):
+    '''
+    Load fates data from netcdf files
+
+    '''
+    if case_name == None:
+        return None
+    
+    months = list(range(1, 13, 1))
+
+    # build a list of file names based on the year and month
+    
+    if inst_tag == None:
+    
+        file_names = [f"{case_name}.clm2.h0.{str(year)}-{str(month).rjust(2, '0')}.nc"
+                  for year in years for month in months]
+    else:
+        file_names = [f"{case_name}.clm2_{inst_tag}.h0.{str(year)}-{str(month).rjust(2, '0')}.nc"
+                  for year in years for month in months]
+
+    if manual_path != None:
+        full_paths = [os.path.join(manual_path, fname) for fname in file_names]
+    
+    else:
+    # create their full path
+        full_paths = [os.path.join(model_output_root, case_name, 'lnd/hist', fname) for fname in file_names]
+
+    # open the dataset -- this may take a bit of time
+    ds = fix_time(xr.open_mfdataset(full_paths, decode_times=True,
+                                    preprocess=functools.partial(preprocess, fields=fields)))
+    
+    if save_processed_output == True:
+        # Path to store processed output (figs, tables etc.)
+        output_path_for_case = os.path.join(processed_output_root,case_name,inst_tag)
+        create_directory(output_path_for_case)
+    
+    print('-- your data have been read in -- ')
+    
+    return(ds)
+
 
 def extract_variable_from_netcdf(file_path, variable_name,pft_index):
     """
