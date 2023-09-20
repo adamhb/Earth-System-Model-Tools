@@ -29,6 +29,7 @@ s_per_month = 3600 * 24 * 30.4
 
 
 
+
 #################################
 # Directories, paths, and files #
 #################################
@@ -167,11 +168,6 @@ def load_fates_output_data(model_output_root, case_name, years, fields,
     ds = fix_time(xr.open_mfdataset(full_paths, decode_times=True,
                                     preprocess=functools.partial(preprocess, fields=fields)))
     
-    if save_processed_output == True:
-        # Path to store processed output (figs, tables etc.)
-        output_path_for_case = os.path.join(processed_output_root,case_name,inst_tag)
-        create_directory(output_path_for_case)
-    
     print('-- your data have been read in -- ')
     
     return(ds)
@@ -239,13 +235,56 @@ def scpf_to_scls_by_pft(scpf_var, dataset):
             .rename({'fates_levscpf':'fates_levpft'})
             .assign_coords({'fates_levscls':dataset.fates_levscls})
             .assign_coords({'fates_levpft':dataset.fates_levpft}))
-    ds_out.attrs['long_name'] = scpf_var.attrs['long_name']
-    ds_out.attrs['units'] = scpf_var.attrs['units']
+    #ds_out.attrs['long_name'] = scpf_var.attrs['long_name']
+    #ds_out.attrs['units'] = scpf_var.attrs['units']
+    return(ds_out)
+
+def agefuel_to_age_by_fuel(agefuel_var, dataset):
+    n_age = len(dataset.fates_levage)
+    ds_out = (agefuel_var.rolling(fates_levagefuel = n_age, center=False).construct("fates_levage")
+          .isel(fates_levagefuel=slice(n_age-1, None, n_age))
+          .rename({'fates_levagefuel':'fates_levfuel'})
+          .assign_coords({'fates_levage':dataset.fates_levage})
+          .assign_coords({'fates_levfuel':np.array([1,2,3,4,5,6])}))
+    return ds_out
+    #ds_out.attrs['long_name'] = agefuel_var['long_name']
+    #ds_out.attrs['units'] = agefuel_var['units']
+
+
+def appf_to_ap_by_pft(appf_var, dataset):
+    """function to reshape a fates multiplexed size and pft-indexed variable to one indexed by size class and pft
+    first argument should be an xarray DataArray that has the FATES SCPF dimension
+    second argument should be an xarray Dataset that has the FATES SCLS dimension 
+    (possibly the dataset encompassing the dataarray being transformed)
+    returns an Xarray DataArray with the size and pft dimensions disentangled"""
+    n_ap = len(dataset.fates_levage)
+    ds_out = (appf_var.rolling(fates_levagepft=n_ap, center=False)
+            .construct("fates_levage")
+            .isel(fates_levagepft=slice(n_ap-1, None, n_ap))
+            .rename({'fates_levagepft':'fates_levpft'})
+            .assign_coords({'fates_levage':dataset.fates_levage})
+            .assign_coords({'fates_levpft':dataset.fates_levpft}))
+    #ds_out.attrs['long_name'] = scpf_var.attrs['long_name']
+    #ds_out.attrs['units'] = scpf_var.attrs['units']
     return(ds_out)
 
 
 
+########
+# Misc #
+########
 
+def per_capita_rate(xarr,xds,unit_conversion):
+    
+    xarr = xarr * unit_conversion
+    
+    if xarr.dims == ('time', 'fates_levscpf'):
+        xarr = scpf_to_scls_by_pft(xarr, xds)
+        xarr = xarr.sum(dim="fates_scls") #sum across size classes
+        
+    xarr_per_cap = xarr / xds.FATES_NPLANT_PF
+    
+    return(xarr_per_cap)
 
 ####################
 # Forest structure #
@@ -330,34 +369,31 @@ def get_total_npp(ds):
 # Making plots #
 ################
 
-def plot_multi_panel(df, x_col, y_cols, figsize=(6, 8)):
-    """
-    Plots multiple y-columns against one x-column in a multi-panel figure.
-    
-    Args:
-    - df (pd.DataFrame): DataFrame containing the data.
-    - x_col (str): Name of the column for the x-axis.
-    - y_cols (list of str): List of column names for the y-axes.
-    - figsize (tuple, optional): Figure size. Defaults to (6, 8).
-    """
-    # Create subplots
-    fig, axs = plt.subplots(nrows=len(y_cols), figsize=figsize, sharex=True)
-    
-    # If only one y_col is provided, axs is not a list; make it one for consistent indexing
-    if len(y_cols) == 1:
-        axs = [axs]
-    
-    # Plot each y_col
-    for i, ycol in enumerate(y_cols):
-        axs[i].scatter(df[x_col], df[ycol], label=ycol)
-        axs[i].legend(loc='upper right')
-        axs[i].set_ylabel(ycol)
-    
-    axs[-1].set_xlabel(x_col)
-    plt.tight_layout()
-    plt.show()
 
 
+#########
+# Light #
+#########
+
+def weighted_avg_par(par_stream,frac_in_canopy):
+    par_z = (par_stream.isel(fates_levcnlf = 0) * frac_in_canopy) +\
+    (par_stream.isel(fates_levcnlf = 30) * (1 - frac_in_canopy))
+    return(par_z)
+
+def frac_in_canopy(xds):
+    return(xds.FATES_CANOPYCROWNAREA_PF / xds.FATES_CROWNAREA_PF)
+
+def incident_par(xds):
+    f = frac_in_canopy(xds)
+
+    par_z_dir = weighted_avg_par(xds.FATES_PARPROF_DIR_CLLL, f)
+    par_z_dif = weighted_avg_par(xds.FATES_PARPROF_DIF_CLLL, f)
+    par_total = par_z_dir + par_z_dif
+
+    return(par_total.rolling(time=12, center=True).mean())
+    
+    
+    
 ##########
 # Output #
 ##########
@@ -371,3 +407,289 @@ def store_output(case_name,case_output_df,processed_output_root,makeFig = True):
     if makeFig == True:
         fig_file_name = "ensemble_fig_" + case_name + ".png"
         plt.savefig(os.path.join(output_path_for_case,fig_file_name))
+
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+     
+
+
+
+
+def get_ignition_success(ds, ignition_density):
+    successful_ignitions = ds.FATES_IGNITIONS.values.mean() * s_per_yr * m2_per_km2
+    ignition_success_rate = successful_ignitions / ignition_density
+    return np.round(ignition_success_rate,3)
+
+
+def get_mean_annual_burn_frac(ds,start_date=None,end_date=None):
+    burnfrac = ds.FATES_BURNFRAC.sel(time = slice(start_date,end_date)).values.mean()  * s_per_yr
+    return np.round(burnfrac,3)
+
+
+
+    
+def get_awfi(ds):
+    aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
+    return aw_fi
+
+def plot_area_weighted_fire_intensity(ds,case):
+    aw_fi = get_awfi(ds)
+    aw_fi.plot(marker = "o",linewidth = 0.5)
+    plt.ylabel("Fire line intensity [kW m-1]")
+    title = "Fire Intensity"
+    plt.title(title)
+    plt.savefig(output_path + "/" + case + "_" + title.replace(" ","-") + ".png")
+    plt.clf()
+
+def get_n_fire_months(ds):
+    aw_fi = get_awfi(ds)
+    n_months = len(aw_fi.values)
+    aw_fi = aw_fi.where(~np.isnan(aw_fi), 0)
+    n_fire_months_boolean = aw_fi > 0
+    n_fire_months = np.sum(n_fire_months_boolean.values)
+    return n_fire_months
+
+def get_PHS_FLI_thresh(ds,FLI_thresh):
+    
+    aw_fi = get_awfi(ds)
+    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
+    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
+    n_fire_months = get_n_fire_months(ds)
+    PHS = n_months_greater_than_thresh / n_fire_months * 100
+    return PHS
+
+    
+def get_PHS(ds,start_date,end_date):
+    ds = ds.sel(time = slice(start_date,end_date))
+    
+    n_fire_months = get_n_fire_months(ds)
+    
+    #disentangle the multiplexed size class X pft dimension
+    mort_fire_by_pft_and_scls = scpf_to_scls_by_pft(ds.FATES_MORTALITY_FIRE_SZPF, ds)
+
+    #get the monthly burned area to calculate mortality rates just on the burned area
+    monthly_burnfrac = ds.FATES_BURNFRAC  * s_per_month
+
+    #sum across size classes to get pft-level mort from fire
+    mort_fire_by_pft = mort_fire_by_pft_and_scls.sum(axis=2)
+
+    #per capita mort per month per unit area that burned
+    mort_fire_per_capita_per_month_per_burned_area = mort_fire_by_pft / ds.FATES_NPLANT_PF / months_per_yr / monthly_burnfrac
+    greater_than_95_mort_bool = mort_fire_per_capita_per_month_per_burned_area.sel(fates_levpft = slice(1,3)).mean(axis = 1) > 0.95
+    greater_than_95_mort = np.sum(greater_than_95_mort_bool.values)
+    #print("conifer mort greater_than_95_mort",greater_than_95_mort)
+
+    greater_than_95_mort_bool_all_pfts = mort_fire_per_capita_per_month_per_burned_area.mean(axis = 1) > 0.95
+    greater_than_95_mort_all_pfts = np.sum(greater_than_95_mort_bool_all_pfts.values)
+
+    frac_greater_than_95_mort = greater_than_95_mort / n_fire_months
+    #print("Conifer PHS:",np.round(frac_greater_than_95_mort,3))
+
+    frac_greater_than_95_mort_all_pfts = greater_than_95_mort_all_pfts / n_fire_months
+    #print("PHS:",np.round(frac_greater_than_95_mort_all_pfts,3))
+    
+    return np.round(frac_greater_than_95_mort_all_pfts,3) * 100
+
+
+def get_PHS_conifer(ds,start_date,end_date):
+    ds = ds.sel(time = slice(start_date,end_date))
+    
+    n_fire_months = get_n_fire_months(ds)
+    
+    #disentangle the multiplexed size class X pft dimension
+    mort_fire_by_pft_and_scls = scpf_to_scls_by_pft(ds.FATES_MORTALITY_FIRE_SZPF, ds)
+
+    #get the monthly burned area to calculate mortality rates just on the burned area
+    monthly_burnfrac = ds.FATES_BURNFRAC  * s_per_month
+
+    #sum across size classes to get pft-level mort from fire
+    mort_fire_by_pft = mort_fire_by_pft_and_scls.sum(axis=2)
+
+    #per capita mort per month per unit area that burned
+    mort_fire_per_capita_per_month_per_burned_area = mort_fire_by_pft / ds.FATES_NPLANT_PF / months_per_yr / monthly_burnfrac
+    greater_than_95_mort_bool = mort_fire_per_capita_per_month_per_burned_area.sel(fates_levpft = slice(1,3)).mean(axis = 1) > 0.95
+    greater_than_95_mort = np.sum(greater_than_95_mort_bool.values)
+    #print("conifer mort greater_than_95_mort",greater_than_95_mort)
+
+    greater_than_95_mort_bool_all_pfts = mort_fire_per_capita_per_month_per_burned_area.mean(axis = 1) > 0.95
+    greater_than_95_mort_all_pfts = np.sum(greater_than_95_mort_bool_all_pfts.values)
+
+    frac_greater_than_95_mort = greater_than_95_mort / n_fire_months
+    #print("Conifer PHS:",np.round(frac_greater_than_95_mort,3))
+
+    frac_greater_than_95_mort_all_pfts = greater_than_95_mort_all_pfts / n_fire_months
+    #print("PHS:",np.round(frac_greater_than_95_mort_all_pfts,3))
+    
+    return np.round(frac_greater_than_95_mort,3) * 100
+
+
+def get_frac_pft_level_basal_area(ds,pft_i,date,dbh_min = 0):
+    basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds) 
+    basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None)).sel(time = date)
+    total_basal_area = basal_area.sum(axis=1).sum(axis = 0)
+    basal_area_pf = basal_area.isel(fates_levpft = pft_i).sum(axis = 0)
+    frac_ba = basal_area_pf.values / total_basal_area.values
+    return frac_ba
+
+
+def write_fire_report(ds,ignition_density,output_path,case):
+    
+    original_stdout = sys.stdout
+    
+    mean_burn_frac = get_mean_annual_burn_frac(ds)
+    
+    with open(output_path + '/' + 'fire_report.txt', 'w') as f:
+        sys.stdout = f # Change the standard output to the file we created.
+        
+        print("case:",case)
+        print("Mean annual burn frac:",mean_burn_frac)
+        print("Mean FRI:",1 / mean_burn_frac)
+        print('PHS (> 95% mort):',get_PHS(ds))
+        print('PHS (> 3500 kW m-1):',get_PHS_FLI_thresh(ds,FLI_thresh))
+        print('Ignition success:',get_ignition_success(ds, ignition_density))
+        
+        sys.stdout = original_stdout
+        
+        
+def plus_minus_20_pct(number):
+    plus_20 = number * 1.2
+    minus_20 = number * 0.8
+    return [plus_20,minus_20]
+
+
+
+def check_fire_regime(ds):
+
+    FLI_threshold = 3500
+
+    burnfrac = ds.FATES_BURNFRAC  * s_per_yr
+    print("Mean annual burn fraction",burnfrac.values.mean())
+    fri = 1 / (ds.FATES_BURNFRAC.values.mean() * s_per_yr)
+    print("Mean fire return interval (yrs):",fri)
+
+    aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
+    n_months = len(aw_fi.values)
+    print("n months",n_months)
+    aw_fi = aw_fi.where(~np.isnan(aw_fi), 0)
+    n_fire_months_boolean = aw_fi > 0
+    n_fire_months = np.sum(n_fire_months_boolean.values)
+    print("n fire months", n_fire_months)
+    n_months_greater_than_thresh_boolean = aw_fi > FLI_threshold
+    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
+    print("n months > threshold",n_months_greater_than_thresh)
+
+    print("Fraction of fire months that burned hotter than X",n_months_greater_than_thresh / n_fire_months)
+
+    #disentangle the multiplexed size class X pft dimension
+    mort_fire_by_pft_and_scls = scpf_to_scls_by_pft(ds.FATES_MORTALITY_FIRE_SZPF, ds)
+
+    #get the monthly burned area to calculate mortality rates just on the burned area
+    monthly_burnfrac = ds.FATES_BURNFRAC  * s_per_month
+
+    #sum across size classes to get pft-level mort from fire
+    mort_fire_by_pft = mort_fire_by_pft_and_scls.sum(axis=2)
+
+    #per capita mort per month per unit area that burned
+    mort_fire_per_capita_per_month_per_burned_area = mort_fire_by_pft / ds.FATES_NPLANT_PF / months_per_yr / monthly_burnfrac
+    greater_than_95_mort_bool = mort_fire_per_capita_per_month_per_burned_area.sel(fates_levpft = slice(1,3)).mean(axis = 1) > 0.95
+    greater_than_95_mort = np.sum(greater_than_95_mort_bool.values)
+    print("conifer mort greater_than_95_mort",greater_than_95_mort)
+
+    greater_than_95_mort_bool_all_pfts = mort_fire_per_capita_per_month_per_burned_area.mean(axis = 1) > 0.95
+    greater_than_95_mort_all_pfts = np.sum(greater_than_95_mort_bool_all_pfts.values)
+
+
+    frac_greater_than_95_mort = greater_than_95_mort / n_fire_months
+    print("frac_greater_than_95_mort",frac_greater_than_95_mort)
+
+    frac_greater_than_95_mort_all_pfts = greater_than_95_mort_all_pfts / n_fire_months
+    print("frac_greater_than_95_mort_all_pfts",frac_greater_than_95_mort_all_pfts)
+        
+    
+def getFullFilePaths(case,start_year,end_year):
+    
+    years = list(range(int(start_year), int(end_year))) 
+    months = list(range(1, 13, 1)) 
+    file_names = [f"{case}.clm2.h0.{str(year)}-{str(month).rjust(2, '0')}.nc"
+              for year in years for month in months]
+
+    full_paths = [os.path.join(archive_path, case, 'lnd/hist', fname) for fname in file_names]
+    return full_paths
+
+def get_rate_table(xarr,xds,var_title,indices,index_title):
+    
+    if xarr.dims == ('time', 'fates_levage'):
+        xarr = xarr.isel(time = slice(-12,-1))
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                     index=xds.fates_levage.values)
+
+    if xarr.dims == ('time', 'fates_levagepft'):
+        xarr = appf_to_ap_by_pft(xarr,xds)
+        xarr = xarr / xds.FATES_PATCHAREA_AP
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                     index = indices, columns=xds.fates_levage.values)
+        series.loc["Total"] = series.sum()
+        tab = tabulate(series, headers="keys", tablefmt="psql")
+        return(tab)
+
+    if xarr.dims == ('time', 'levgrnd'):
+        grnd_depths = xds.levgrnd.values[indices]
+        xarr = xarr.isel(levgrnd = indices).isel(time = slice(12,-1)) * MPa_per_mmh2o
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                          index = grnd_depths).sort_values(by = 0, ascending=True).reset_index()
+    else:
+        series = pd.DataFrame(xarr.mean(axis = 0).values,
+                          index = indices).sort_values(by = 0, ascending=False).reset_index()
+    
+    my_dict = {index_title:list(series.iloc[:,0]), var_title:list(series.iloc[:,1])}
+    my_df = pd.DataFrame.from_dict(my_dict).set_index(index_title)
+    tab = tabulate(my_df, headers='keys', tablefmt='psql')
+    return(tab)
+
+
+
+
+    
+def is_xarray_dataset(obj):
+    return isinstance(obj, xr.Dataset)
+
+def filter_data(ds,start,stop):
+    if is_xarray_dataset(ds):
+        return ds.sel(time = slice(start, stop))
+    else:  
+        return None
+    
+
+
+def get_area_weighed_FLI(ds):    
+    return (ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000)
+
+
+def get_per_capita_fire_mort_by_scls(ds):
+    mort_fire_by_pft_and_scls = scpf_to_scls_by_pft(ds.FATES_MORTALITY_FIRE_SZPF, ds)
+    nplant_by_pft_scls = scpf_to_scls_by_pft(ds.FATES_NPLANT_SZPF, ds)
+    return(mort_fire_by_pft_and_scls / nplant_by_pft_scls)
