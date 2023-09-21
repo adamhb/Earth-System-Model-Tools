@@ -13,6 +13,9 @@ from esm_tools import *
 n_ticks = 10
 line_width = 3
 fontsize = 12
+MPa_per_mmh2o = 1e-5
+
+
 
 def get_years_from_xarr(xarr):
     years = [xarr.time[i].item().year for i in range(len(xarr.time))]
@@ -106,7 +109,7 @@ def plot_array(xarr,xds,n_pfts,pft_colors,pft_names,title,ylabel,output_path,con
 
     if subplots == True:
         
-        ncol,nrow = esm_tools.get_n_subplots(n_pfts)
+        ncol,nrow = get_n_subplots(n_pfts)
         fig, axes = plt.subplots(ncols=ncol,nrows=nrow,figsize=(7,7))
         
         for p,ax in zip(range(n_pfts),axes.ravel()):
@@ -125,37 +128,37 @@ def plot_array(xarr,xds,n_pfts,pft_colors,pft_names,title,ylabel,output_path,con
         plt.subplots_adjust(hspace=0.6,wspace=0.6)
         fig.suptitle(title, fontsize=fontsize)
 
-    plt.savefig(output_path + "/" + title.replace(" ","") + ".pdf")
-    plt.savefig(output_path + "/" + title.replace(" ","") + ".png")
+    #plt.savefig(output_path + "/" + title.replace(" ","") + ".pdf")
+    #plt.savefig(output_path + "/" + title.replace(" ","") + ".png")
     
     if getData == True:
         return(xarr)
 
 def plot_smp(xarr,xds,output_path,depths = [4,7,8],return_means = False):
     title = "SMP"
-    nbase = getNBase(xarr)
+    #nbase = getNBase(xarr)
  
     fig, ax = plt.subplots(figsize = (7,7))
 
     mean_smp = []
     for d in depths:
-        smp = xarr.isel(levgrnd = d).isel(time = slice(12,-1)) * MPa_per_mmh2o
+        smp = xarr.isel(levgrnd = d) * MPa_per_mmh2o
         smp.plot(label = xds.levgrnd.values[d])
         plt.legend()
 
-    ax.xaxis.set_major_formatter(DateFormatter('%Y'))
-    ax.xaxis.set_major_locator(mdates.YearLocator(base=nbase))
-    ax.set_ylabel("SMP [MPa]",fontsize = fontsize)
+    #ax.xaxis.set_major_formatter(DateFormatter('%Y'))
+    #ax.xaxis.set_major_locator(mdates.YearLocator(base=nbase))
+    ax.set_ylabel("SMP [MPa]")
     ax.title.set_text("SMP [MPa]")
 
-    plt.savefig(output_path + "/" + title.replace(" ","") + ".pdf")
-    plt.savefig(output_path + "/" + title.replace(" ","") + ".png")
+    #plt.savefig(output_path + "/" + title.replace(" ","") + ".pdf")
+    #plt.savefig(output_path + "/" + title.replace(" ","") + ".png")
 
 
 def plot_ap(xarr, xds, sup_title, ylabel, output_path):
     nbase = getNBase(xarr) * 2
     n_age = len(xds.fates_levage)
-    ncol,nrow = esm_tools.get_n_subplots(n_age)
+    ncol,nrow = get_n_subplots(n_age)
     fig, axes = plt.subplots(ncols=ncol,nrows=nrow,figsize=(10,10))
 
     for age,ax in zip(range(n_age),axes.ravel()):
@@ -169,8 +172,8 @@ def plot_ap(xarr, xds, sup_title, ylabel, output_path):
     plt.subplots_adjust(hspace=0.6,wspace=0.6)
     fig.suptitle(sup_title, fontsize=fontsize)
 
-    plt.savefig(output_path + "/" + sup_title.replace(" ","") + ".pdf")
-    plt.savefig(output_path + "/" + sup_title.replace(" ","") + ".png")
+    #plt.savefig(output_path + "/" + sup_title.replace(" ","") + ".pdf")
+    #plt.savefig(output_path + "/" + sup_title.replace(" ","") + ".png")
 
 def plot_ba(ds,n_pfts,pft_names):
         #disentangle the multiplexed size class X pft dimension
@@ -281,9 +284,19 @@ def cca_by_patch_age(ds,n_pfts,pft_names,pft_colors,canopy_crown_area = False):
     plt.xlabel("Patch age bin (yrs)")
     plt.ylabel("Crown area [m2 m-2]")
     
+def plot_area_weighted_fire_intensity(ds):
+    aw_fi = esm_tools.get_awfi(ds)
+    aw_fi.plot(marker = "o",linewidth = 0.5)
+    plt.ylabel("Fire line intensity [kW m-1]")
+    title = "Fire Intensity"
+    plt.title(title)
+    #plt.savefig(output_path + "/" + case + "_" + title.replace(" ","-") + ".png")
+    #plt.clf()
+
+    
 def plot_mean_annual_burn_frac(ds,start_date=None,end_date=None):
     burnfrac = ds.FATES_BURNFRAC  * s_per_yr
-    total_mean_annual_burnfrac = get_mean_annual_burn_frac(ds,start_date,end_date)
+    total_mean_annual_burnfrac = esm_tools.get_mean_annual_burn_frac(ds,start_date,end_date)
 
     annual_mean_burnfrac = burnfrac.groupby('time.year').mean(dim='time').values
     title = f"Mean annual burn fraction: {np.round(total_mean_annual_burnfrac,3)}"

@@ -280,7 +280,7 @@ def per_capita_rate(xarr,xds,unit_conversion):
     
     if xarr.dims == ('time', 'fates_levscpf'):
         xarr = scpf_to_scls_by_pft(xarr, xds)
-        xarr = xarr.sum(dim="fates_scls") #sum across size classes
+        xarr = xarr.sum(dim="fates_levscls") #sum across size classes
         
     xarr_per_cap = xarr / xds.FATES_NPLANT_PF
     
@@ -453,6 +453,9 @@ def get_mean_annual_burn_frac(ds,start_date=None,end_date=None):
 
     
 def get_awfi(ds):
+    '''
+    Returns area-weighted fire intensity (kW m-1)
+    '''
     aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
     return aw_fi
 
