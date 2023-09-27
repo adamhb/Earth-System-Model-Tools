@@ -194,6 +194,43 @@ def extract_variable_from_netcdf(file_path, variable_name,pft_index):
         else:
             raise ValueError(f"'{variable_name}' not found in the NetCDF file.")
 
+def extract_variable_from_netcdf_specify_organ(file_path, variable_name,pft_index,organ_index):
+    """
+    Extract a variable from a NetCDF file.
+
+    Parameters:
+    - file_path: The path to the NetCDF file.
+    - variable_name: The name of the variable to extract.
+    - pft index (python index starting at 0)
+    - organ index (python index starting at 0)
+
+    Returns:
+    - The extracted variable data.
+    """
+    with nc4.Dataset(file_path, 'r') as dataset:
+        # Check if the variable exists in the dataset
+        if variable_name in dataset.variables:
+            variable_data = dataset.variables[variable_name][:]
+
+            if organ_index == None:
+                if len(variable_data.shape) > 1:
+                    return variable_data[0,pft_index]
+                elif len(variable_data.shape) ==  1:
+                    return variable_data[pft_index]
+                elif len(variable_data.shape) ==  0:
+                    return variable_data
+                else:
+                    print("Dimension? Not returning anything")
+                    
+            else:
+                if (pft_index == 0) & (organ_index is not None) & (variable_name != "fates_stoich_nitr"):
+                    return variable_data[organ_index]
+                else:
+                    return variable_data[organ_index,pft_index]
+        else:
+            raise ValueError(f"'{variable_name}' not found in the NetCDF file.")
+
+
 
 def get_parameter_file_of_inst(params_root,param_dir,inst):
     
@@ -398,17 +435,12 @@ def incident_par(xds):
 # Output #
 ##########
 
-def store_output(case_name,case_output_df,processed_output_root,makeFig = True):
+def store_output_csv(case_name,case_output_df,processed_output_root):
     output_path_for_case = os.path.join(processed_output_root,case_name)
     create_directory(output_path_for_case)
     df_file_name = "ensemble_output_" + case_name + ".csv"
     case_output_df.to_csv(os.path.join(output_path_for_case,df_file_name))
-    
-    if makeFig == True:
-        fig_file_name = "ensemble_fig_" + case_name + ".png"
-        plt.savefig(os.path.join(output_path_for_case,fig_file_name))
-
-        
+       
 
         
         
@@ -477,7 +509,9 @@ def get_n_fire_months(ds):
     return n_fire_months
 
 def get_PHS_FLI_thresh(ds,FLI_thresh):
-    
+    '''
+    Returns percent of fire months that had a mean severity above FLI_thresh 
+    ''' 
     aw_fi = get_awfi(ds)
     n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
     n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)

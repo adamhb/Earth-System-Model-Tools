@@ -44,7 +44,9 @@ def get_n_subplots(n_pfts):
 
     return (ncol,int(nrow))
 
-def plot_multi_panel(df, x_col, y_cols, figsize=(6, 8)):
+def plot_multi_panel(df, x_col, y_cols, figsize=(6, 8),
+                     save_fig = False,
+                     output_path_for_case = None):
     """
     Plots multiple y-columns against one x-column in a multi-panel figure.
     
@@ -68,8 +70,13 @@ def plot_multi_panel(df, x_col, y_cols, figsize=(6, 8)):
         axs[i].set_ylabel(ycol)
     
     axs[-1].set_xlabel(x_col)
+    if save_fig == True:
+         fig_file_name = "ensemble_fig_" + x_col + ".png"
+         plt.savefig(os.path.join(output_path_for_case,fig_file_name))
     plt.tight_layout()
     plt.show()
+
+   
 
 
 def plot_array(xarr,xds,n_pfts,pft_colors,pft_names,title,ylabel,output_path,conversion = 1,subplots = False, getData = False, dbh_min = None):
@@ -292,6 +299,15 @@ def plot_area_weighted_fire_intensity(ds):
     plt.title(title)
     #plt.savefig(output_path + "/" + case + "_" + title.replace(" ","-") + ".png")
     #plt.clf()
+
+def plot_awfi_hist(ds,start_date=None,end_date=None):
+    aw_fi = esm_tools.get_awfi(ds)
+    aw_fi = aw_fi.sel(time = slice(start_date,end_date))
+    #print(aw_fi.values)
+    plt.hist(aw_fi.values, bins=20, edgecolor='black')
+    plt.xlabel('Area-weighted burn intensity [kW m-1]')
+    plt.ylabel('Frequency')
+    plt.title("Area-weighted burn intensity")
 
     
 def plot_mean_annual_burn_frac(ds,start_date=None,end_date=None):
