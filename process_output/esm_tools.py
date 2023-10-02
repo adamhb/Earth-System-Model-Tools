@@ -338,6 +338,27 @@ def get_pft_level_basal_area(ds,dbh_min = None):
     return basal_area_pf
 
 
+def get_pft_level_crown_area(ds,canopy_area_only = True, pft_index = None):
+    '''Returns a numpy array of pft-specifi crown area [m2 m-2]
+       time-averaged over the timesteps in the dataset (ds)
+
+       Input: xarray dataset containing FATES_CANOPYCROWNAREA_PF
+       pft_index starts at 0
+
+    '''
+    
+    if canopy_area_only == True:
+        crown_area = ds.FATES_CANOPYCROWNAREA_PF
+    else:
+        crown_area = ds.FATES_CROWNAREA_PF
+
+    crown_area = crown_area.mean(dim = "time")
+
+    if pft_index is not None:
+        crown_area = crown_area.isel(fates_levpft = pft_index)
+
+    return crown_area.values    
+
 
 def shannon_equitability(arr):
     if isinstance(arr, np.ndarray) == True:
@@ -518,6 +539,18 @@ def get_PHS_FLI_thresh(ds,FLI_thresh):
     n_fire_months = get_n_fire_months(ds)
     PHS = n_months_greater_than_thresh / n_fire_months * 100
     return PHS
+
+
+def get_combustible_fuel(ds):
+    '''
+    Returns the amount of combustible fuel on the landscape. Averages over the time dimension.
+    '''
+
+    age_by_fuel = agefuel_to_age_by_fuel(ds.FATES_FUEL_AMOUNT_APFC,ds)
+    fates_fuel_amount_by_class = age_by_fuel.sum(dim = "fates_levage").mean(dim = "time")
+    fates_trunk_fuel_amount = fates_fuel_amount_by_class.isel(fates_levfuel = 3)
+    fates_combustible_fuel_amount = fates_fuel_amount_by_class.sum(dim = "fates_levfuel") - fates_trunk_fuel_amount
+    return fates_combustible_fuel_amount.values
 
     
 def get_PHS(ds,start_date,end_date):
