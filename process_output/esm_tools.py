@@ -380,7 +380,16 @@ def get_n_failed_pfts(arr,ba_thresh=0.1):
     return failed.astype(int).sum()
 
 
-def get_total_stem_den(ds,trees_only=True, dbh_min=None):
+def get_resprout_stem_den(ds,pft = None):
+    
+    if pft == None:
+        den = ds.FATES_NPLANT_RESPROUT_PF.sum(dim = "fates_levpft").mean(dim = "time") * m2_per_ha
+    else:
+        den = ds.FATES_NPLANT_RESPROUT_PF.isel(fates_levpft = pft).mean(dim = "time") * m2_per_ha
+    
+    return den.values
+
+def get_total_stem_den(ds,trees_only=True, dbh_min=None, resprout = False):
     
     '''This function returns a time-averaged value for
     stem density [N ha-1] with the option to exclude shrubs (pft 4)'''
@@ -456,10 +465,10 @@ def incident_par(xds):
 # Output #
 ##########
 
-def store_output_csv(case_name,case_output_df,processed_output_root):
+def store_output_csv(case_name,file_name,case_output_df,processed_output_root):
     output_path_for_case = os.path.join(processed_output_root,case_name)
     create_directory(output_path_for_case)
-    df_file_name = "ensemble_output_" + case_name + ".csv"
+    df_file_name = "ensemble_output_" + file_name + ".csv"
     case_output_df.to_csv(os.path.join(output_path_for_case,df_file_name))
        
 
