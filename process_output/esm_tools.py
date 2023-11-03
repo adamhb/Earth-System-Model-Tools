@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import functools
+from datetime import datetime
 #import hist
 #from get_output import archive_path as archive_path
 #import viz
@@ -33,6 +34,14 @@ s_per_month = 3600 * 24 * 30.4
 #################################
 # Directories, paths, and files #
 #################################
+
+def print_current_datetime_no_spaces():
+    # Get the current date and time
+    now = datetime.now()
+    # Format the datetime as a string without spaces (e.g., YYYYMMDDHHMMSS)
+    datetime_string = now.strftime('%Y%m%d%H%M%S')
+    return datetime_string
+
 
 def get_path_to_sim(case_name,case_output_root,suffix = 'lnd/hist'):
     '''case_name: name of cime case
@@ -468,6 +477,7 @@ def incident_par(xds):
 def store_output_csv(case_name,file_name,case_output_df,processed_output_root):
     output_path_for_case = os.path.join(processed_output_root,case_name)
     create_directory(output_path_for_case)
+    current_date_and_time = print_current_datetime_no_spaces()
     df_file_name = "ensemble_output_" + file_name + ".csv"
     case_output_df.to_csv(os.path.join(output_path_for_case,df_file_name))
        

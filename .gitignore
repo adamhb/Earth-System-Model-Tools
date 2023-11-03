@@ -10,3 +10,4 @@ __pycache__*
 .RData
 .Ruserdata
 process_output/scratch.ipynb
+process_output/tmp
