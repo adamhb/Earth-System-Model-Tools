@@ -201,7 +201,7 @@ def plot_ba(ds,n_pfts,pft_names):
 def plot_size_class_distribution(ds,n_pfts,pft_colors,pft_names,variable_type = "BA", final_timestep = True,
                                  specific_time_step = None,
                                  conversion = 1,
-                                 dbh_min = None):
+                                 dbh_min = None,pft_specific = True):
     
         
     
@@ -220,6 +220,11 @@ def plot_size_class_distribution(ds,n_pfts,pft_colors,pft_names,variable_type = 
     
     xarr = xarr * conversion
     
+ 
+    if pft_specific == False:
+        xarr = xarr.isel(fates_levpft = np.array([0,1,2,4]))       
+
+
     ncol,nrow = get_n_subplots(n_pfts)
     fig, axes = plt.subplots(ncols=ncol,nrows=nrow,figsize=(10,5))
     

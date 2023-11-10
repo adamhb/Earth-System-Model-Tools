@@ -16,7 +16,7 @@ from datetime import datetime
 #import viz
 #from myparams import *
 from tabulate import tabulate
-
+from scipy.io import netcdf as nc
 
 # Constants
 s_per_yr = 31536000
@@ -203,6 +203,40 @@ def extract_variable_from_netcdf(file_path, variable_name,pft_index):
         else:
             raise ValueError(f"'{variable_name}' not found in the NetCDF file.")
 
+def assign_var_to_nc(file_path,var_name,value,index):
+    
+    '''
+    assigns a value to a netcdf for a particular pft and organ
+    
+    file = full path to netcdf
+    var_name = fates parameter name
+    value = parameter value to add to file
+    '''
+    
+    # open nc file
+    ncfile = nc.netcdf_file(file_path, 'a')
+    
+    # define param of interest
+    var = ncfile.variables[var_name]
+    
+    # get number of dimensions
+    ndim = len(var.dimensions)
+    
+    if var_name == "fates_stoich_nitr":
+        organ_index = 0
+        var[organ_index,index] = value
+    
+    elif "fates_leafage_class" in var.dimensions:
+        var[:,index] = value
+   
+    elif ndim == 0:
+        
+        var[...] = value
+    
+    else:
+        var[index] = value
+
+
 def extract_variable_from_netcdf_specify_organ(file_path, variable_name,pft_index,organ_index):
     """
     Extract a variable from a NetCDF file.
@@ -256,7 +290,6 @@ def get_parameter_file_of_inst(params_root,param_dir,inst):
 
     # Get the instance files
     file_oi = find_files_with_substring(path_to_param_files, substring)
-    
     full_file_path = os.path.join(path_to_param_files,file_oi[0])
     
     return full_file_path
