@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import functools
 from datetime import datetime
+from datetime import date
 #import hist
 #from get_output import archive_path as archive_path
 #import viz
@@ -82,7 +83,31 @@ def find_files_with_substring(directory, substring):
     
     return matching_files
 
-def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "monthly"):
+
+
+def filter_files(file_list, before_year):
+    # Regular expression to find YYYY-MM pattern
+    date_pattern = re.compile(r'(\d{4})-(\d{2})')
+
+    # Filtered list of files
+    filtered_files = []
+
+    # Iterate over files in the list
+    for file_name in file_list:
+        # Search for the date pattern in the filename
+        match = date_pattern.search(file_name)
+        if match:
+            year, month = map(int, match.groups())
+            file_date = date(year, month, 1)  # Create a date object
+
+            # Check if the file date is before the specified year
+            if file_date.year < before_year:
+                filtered_files.append(file_name)
+
+    return filtered_files
+
+def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "monthly",
+                      end_year = None):
     
     '''Returns files from the last n years (param: last_n_years)
     of a simulation (param: full_case_path) belonging to a specific ensemble member (param: inst_tag)'''
@@ -90,7 +115,11 @@ def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "mont
     substring = "clm2_" + inst_tag + ".h0"
     
     # Get the instance files
-    files = find_files_with_substring(full_case_path, substring)
+    inst_files = find_files_with_substring(full_case_path, substring)
+    # Subset based on years
+    if end_year is not None:
+         files = filter_files(inst_files,end_year)
+    
     full_files = [os.path.join(full_case_path,f) for f in files]
     
     # Get last n files from last n years
@@ -380,7 +409,41 @@ def get_pft_level_basal_area(ds,dbh_min = None):
     return basal_area_pf
 
 
-def get_pft_level_crown_area(ds,canopy_area_only = True, pft_index = None):
+def get_tree_basal_area_over_time(ds,dbh_min = None):
+    '''Returns a numpy array of pft-specific basal area [m-2 ha-1]
+      
+
+       Input: xarray dataset containing FATES_BASALAREA_SZPF'''
+    basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds)
+    basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None))
+    basal_area = basal_area.sel(fates_levpft = slice(0,3))
+    basal_area_pf = basal_area.sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
+    return basal_area_pf
+
+def get_conifer_basal_area_over_time(ds,dbh_min = None):
+    '''Returns a numpy array of pft-specific basal area [m-2 ha-1]
+      
+
+       Input: xarray dataset containing FATES_BASALAREA_SZPF'''
+    basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds)
+    basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None))
+    basal_area = basal_area.sel(fates_levpft = slice(0,3))
+    basal_area_pf = basal_area.sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
+    return basal_area_pf
+
+def get_oak_basal_area_over_time(ds,dbh_min = None):
+    '''Returns a numpy array of pft-specific basal area [m-2 ha-1]
+      
+
+       Input: xarray dataset containing FATES_BASALAREA_SZPF'''
+    basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds)
+    basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None))
+    basal_area = basal_area.isel(fates_levpft = 4)
+    basal_area_pf = basal_area.sum(dim="fates_levscls").values * m2_per_ha
+    return basal_area_pf
+
+
+def get_pft_level_crown_area(ds,canopy_area_only = True, pft_index = None, over_time = False):
     '''Returns a numpy array of pft-specifi crown area [m2 m-2]
        time-averaged over the timesteps in the dataset (ds)
 
@@ -393,13 +456,39 @@ def get_pft_level_crown_area(ds,canopy_area_only = True, pft_index = None):
         crown_area = ds.FATES_CANOPYCROWNAREA_PF
     else:
         crown_area = ds.FATES_CROWNAREA_PF
-
-    crown_area = crown_area.mean(dim = "time")
+    
+    if over_time == False:
+        crown_area = crown_area.mean(dim = "time")
+    if over_time == True:
+        crown_area = crown_area
 
     if pft_index is not None:
         crown_area = crown_area.isel(fates_levpft = pft_index)
 
     return crown_area.values    
+
+def get_conifer_crown_area(ds,canopy_area_only = True, pft_index = None, over_time = False):
+    '''Returns a numpy array of pft-specifi crown area [m2 m-2]
+       time-averaged over the timesteps in the dataset (ds)
+
+       Input: xarray dataset containing FATES_CANOPYCROWNAREA_PF
+       pft_index starts at 0
+
+    '''
+
+    if canopy_area_only == True:
+        crown_area = ds.FATES_CANOPYCROWNAREA_PF
+    else:
+        crown_area = ds.FATES_CROWNAREA_PF
+
+    if over_time == False:
+        crown_area = crown_area.mean(dim = "time")
+    if over_time == True:
+        crown_area = crown_area
+
+    crown_area = crown_area.sel(fates_levpft = slice(0,3)).sum(dim = "fates_levpft")
+
+    return crown_area.values
 
 
 def shannon_equitability(arr):
@@ -431,13 +520,16 @@ def get_resprout_stem_den(ds,pft = None):
     
     return den.values
 
-def get_total_stem_den(ds,trees_only=True, dbh_min=None, resprout = False):
+def get_total_stem_den(ds,trees_only=True, dbh_min=None, resprout = False, over_time = False):
     
     '''This function returns a time-averaged value for
     stem density [N ha-1] with the option to exclude shrubs (pft 4)'''
     den = scpf_to_scls_by_pft(ds.FATES_NPLANT_SZPF, ds)
 
-    den = den.mean(dim = "time")
+    if over_time == False:
+        den = den.mean(dim = "time")
+    if over_time == True:
+        den = den
 
     if dbh_min != None:
         den = den.sel(fates_levscls = slice(dbh_min,None)).sum(dim = "fates_levscls")
@@ -511,7 +603,7 @@ def store_output_csv(case_name,file_name,case_output_df,processed_output_root):
     output_path_for_case = os.path.join(processed_output_root,case_name)
     create_directory(output_path_for_case)
     current_date_and_time = print_current_datetime_no_spaces()
-    df_file_name = "ensemble_output_" + file_name + ".csv"
+    df_file_name = "ensemble_output_" + file_name + "_" + current_date_and_time + ".csv"
     case_output_df.to_csv(os.path.join(output_path_for_case,df_file_name))
        
 
@@ -550,10 +642,12 @@ def get_ignition_success(ds, ignition_density):
     return np.round(ignition_success_rate,3)
 
 
-def get_mean_annual_burn_frac(ds,start_date=None,end_date=None):
-    burnfrac = ds.FATES_BURNFRAC.sel(time = slice(start_date,end_date)).values.mean()  * s_per_yr
+def get_mean_annual_burn_frac(ds,start_date=None,end_date=None,over_time = False):
+    if over_time == False:
+        burnfrac = ds.FATES_BURNFRAC.sel(time = slice(start_date,end_date)).values.mean()  * s_per_yr
+    else:
+        burnfrac = ds.FATES_BURNFRAC.sel(time = slice(start_date,end_date)).values * s_per_yr
     return np.round(burnfrac,3)
-
 
 
     
@@ -591,6 +685,21 @@ def get_PHS_FLI_thresh(ds,FLI_thresh):
     n_fire_months = get_n_fire_months(ds)
     PHS = n_months_greater_than_thresh / n_fire_months * 100
     return PHS
+
+def get_PHS_FLI_thresh_isel(ds,i_start,i_end,FLI_thresh):
+    '''
+    Returns percent of fire months that had a mean severity above FLI_thresh 
+    '''
+    ds = ds.isel(time = slice(i_start,i_end))
+    aw_fi = get_awfi(ds)
+    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
+    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
+    n_fire_months = get_n_fire_months(ds)
+    PHS = n_months_greater_than_thresh / n_fire_months * 100
+    return PHS
+
+
+
 
 
 def get_combustible_fuel(ds):
@@ -676,7 +785,6 @@ def get_frac_pft_level_basal_area(ds,pft_i,date,dbh_min = 0):
     basal_area_pf = basal_area.isel(fates_levpft = pft_i).sum(axis = 0)
     frac_ba = basal_area_pf.values / total_basal_area.values
     return frac_ba
-
 
 def write_fire_report(ds,ignition_density,output_path,case):
     
