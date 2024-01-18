@@ -112,14 +112,26 @@ def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "mont
     '''Returns files from the last n years (param: last_n_years)
     of a simulation (param: full_case_path) belonging to a specific ensemble member (param: inst_tag)'''
     
-    substring = "clm2_" + inst_tag + ".h0"
+    if inst_tag != None:
+        substring = "clm2_" + inst_tag + ".h0"
     
-    # Get the instance files
-    inst_files = find_files_with_substring(full_case_path, substring)
+
+
+    if inst_tag != None:
+        # Get the instance files
+        inst_files = find_files_with_substring(full_case_path, substring)
+    
+    else:
+        inst_files = os.listdir(full_case_path)
+    
+    
+    
     # Subset based on years
     if end_year is not None:
-         files = filter_files(inst_files,end_year)
-    
+        files = filter_files(inst_files,end_year)
+    else:
+        files = inst_files
+
     full_files = [os.path.join(full_case_path,f) for f in files]
     
     # Get last n files from last n years
