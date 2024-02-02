@@ -1,6 +1,7 @@
 #funcs
 import netCDF4 as nc4
 import sys
+import glob
 import re
 import getopt
 import os
@@ -8,6 +9,7 @@ import xarray as xr
 import functools
 import numpy as np
 import matplotlib.pyplot as plt
+import fnmatch
 import pandas as pd
 import functools
 from datetime import datetime
@@ -40,8 +42,11 @@ def print_current_datetime_no_spaces():
     # Get the current date and time
     now = datetime.now()
     # Format the datetime as a string without spaces (e.g., YYYYMMDDHHMMSS)
-    datetime_string = now.strftime('%Y%m%d%H%M%S')
+    datetime_string = now.strftime('%Y%m%d-%H%M')
     return datetime_string
+
+def inst_to_tag(inst_arr):
+    return [str(i).zfill(4) for i in inst_arr]
 
 
 def get_path_to_sim(case_name,case_output_root,suffix = 'lnd/hist'):
@@ -66,6 +71,18 @@ def get_unique_inst_tags(full_case_path):
     inst_tags = np.unique(np.array([extract_digits(f) for f in files]))
     return inst_tags
 
+def find_nc_and_rpointer_files(directory):
+    matches = []
+    for root, dirnames, filenames in os.walk(directory):
+        for filename in fnmatch.filter(filenames, '*.nc'):
+            matches.append(os.path.join(root, filename))
+        for filename in filenames:
+            if "rpointer" in filename:
+                matches.append(os.path.join(root, filename))
+    return matches
+
+
+
 def find_files_with_substring(directory, substring):
     """
     Returns a list of filenames in the given directory that contain the given substring.
@@ -83,7 +100,9 @@ def find_files_with_substring(directory, substring):
     
     return matching_files
 
-
+def list_files_matching_pattern(directory_path, pattern):
+    matching_files = glob.glob(os.path.join(directory_path, pattern))
+    return sorted(matching_files)
 
 def filter_files(file_list, before_year):
     # Regular expression to find YYYY-MM pattern
@@ -105,6 +124,41 @@ def filter_files(file_list, before_year):
                 filtered_files.append(file_name)
 
     return filtered_files
+
+def filter_model_output_by_year(file_list, start_year, end_year):
+
+    '''
+    Inputs:
+    - file_list: list of files that you want to sort through
+    - end_year is inclusive
+    - start_year is inclusive
+    
+    Output:
+    - filtered list of file names
+    '''
+
+    # Regular expression to find YYYY-MM pattern
+    date_pattern = re.compile(r'(\d{4})-(\d{2})')
+
+    # Filtered list of files
+    filtered_files = []
+
+    # Iterate over files in the list
+    for file_name in file_list:
+        # Search for the date pattern in the filename
+        match = date_pattern.search(file_name)
+        if match:
+            year, month = map(int, match.groups())
+            file_date = date(year, month, 1)  # Create a date object
+
+            # Check if the file date is before the specified year
+            if (file_date.year <= int(end_year)) & (file_date.year >= int(start_year)):
+                filtered_files.append(file_name)
+
+    return filtered_files
+
+
+
 
 def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "monthly",
                       end_year = None):
@@ -147,6 +201,42 @@ def get_files_of_inst(full_case_path,inst_tag,last_n_years,output_period = "mont
 
 
 
+
+def filter_output_files(src_data_path,inst_tag,start_yr,end_yr):
+    
+    '''
+    Filters model output files by instance and year
+
+    Inputs:
+    - src_data_path: path to model output files
+    - inst_tag
+    - start_yr
+    - end_yr
+
+    Output:
+    - List of files (full paths) matching criteria for inst_tag and year range
+    '''
+    
+    # Filter by instance
+    if inst_tag != None:
+        substring = "clm2_" + inst_tag + ".h0"
+        inst_files = find_files_with_substring(src_data_path, substring)
+    else:
+        inst_files = os.listdir(src_data_path)
+    
+    # Subset based on years
+    inst_files = filter_model_output_by_year(inst_files,start_yr,end_yr)
+
+    inst_files_full_paths = [os.path.join(src_data_path,f) for f in inst_files]
+
+    return sorted(inst_files_full_paths)
+
+
+
+
+
+
+
 def create_directory(directory_path):
     try:
         os.mkdir(directory_path)
@@ -158,7 +248,7 @@ def fancy_index(x,indices):
     return np.array(x)[np.array(indices)]
 
 ###################################
-# Import netcdf files into xarray #
+# Manupilate netcdf files  xarray #
 ###################################
 
 def preprocess(ds, fields):
@@ -223,6 +313,14 @@ def load_fates_output_data(model_output_root, case_name, years, fields,
     return(ds)
 
 
+def convert_cftime_to_datetime(cftime_obj):
+
+    # Convert it to a datetime object
+    datetime_obj = datetime(cftime_obj.year, cftime_obj.month, cftime_obj.day,
+                            cftime_obj.hour, cftime_obj.minute, cftime_obj.second)
+
+    return datetime_obj
+
 def extract_variable_from_netcdf(file_path, variable_name,pft_index):
     """
     Extract a variable from a NetCDF file.
@@ -276,6 +374,27 @@ def assign_var_to_nc(file_path,var_name,value,index):
     
     else:
         var[index] = value
+
+
+def assign_variable_to_netcdf(file_path, variable_name, new_value):
+    with nc4.Dataset(file_path, 'r+') as dataset:
+        if variable_name in dataset.variables:
+            # Access the variable
+            variable = dataset.variables[variable_name]
+        
+            # Assign a value
+            # The way you assign depends on the shape and dimensions of the variable
+            # For a single-value variable:
+            variable[...] = new_value  # Replace new_value with the value you want to assign
+        
+            # For a multi-dimensional variable, specify indices or slices
+            # Example for a 2D variable (like temperature at a specific time and place):
+            # variable[time_index, place_index] = new_value
+        
+            #print(f"Value {new_value} assigned to {variable_name}.")
+        else:
+            print(f"Variable {variable_name} not found in the dataset.")
+
 
 
 def extract_variable_from_netcdf_specify_organ(file_path, variable_name,pft_index,organ_index):
@@ -454,6 +573,14 @@ def get_oak_basal_area_over_time(ds,dbh_min = None):
     basal_area_pf = basal_area.sum(dim="fates_levscls").values * m2_per_ha
     return basal_area_pf
 
+def get_pft_level_basal_area_over_time(ds,pft_index,dbh_min = None):
+    
+    basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds)
+    basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None))
+    basal_area = basal_area.isel(fates_levpft = pft_index)
+    basal_area = basal_area.sum(dim="fates_levscls").values * m2_per_ha
+    return basal_area
+
 
 def get_pft_level_crown_area(ds,canopy_area_only = True, pft_index = None, over_time = False):
     '''Returns a numpy array of pft-specifi crown area [m2 m-2]
@@ -564,6 +691,15 @@ def get_AGB(ds):
     agb_total = ds.FATES_VEGC_ABOVEGROUND.mean(dim = "time").values 
     return agb_total.item()
 
+def get_AGCD(ds,ts = False):
+    '''Returns Total AG Carbon Density [kg C m-2]'''
+
+    if ts == True:
+        agb_total = ds.FATES_VEGC_ABOVEGROUND.values
+        return agb_total
+    else:
+        agb_total = ds.FATES_VEGC_ABOVEGROUND.mean(dim = "time").values 
+        return agb_total.item()
 
 
 
@@ -576,13 +712,6 @@ def get_total_npp(ds):
     '''Returns NPP [kg m-2 yr-1]'''
     npp_total = ds.FATES_NPP_PF.sum(dim="fates_levpft").mean(dim = "time").values * s_per_yr
     return npp_total
-
-
-################
-# Making plots #
-################
-
-
 
 #########
 # Light #
@@ -663,12 +792,24 @@ def get_mean_annual_burn_frac(ds,start_date=None,end_date=None,over_time = False
 
 
     
+#def get_awfi(ds):
+#    '''
+#    Returns area-weighted fire intensity (kW m-1)
+#    '''
+#    aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
+#    return aw_fi
+
 def get_awfi(ds):
     '''
     Returns area-weighted fire intensity (kW m-1)
     '''
-    aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
-    return aw_fi
+    a1 = ds.FATES_FIRE_INTENSITY_BURNFRAC.values
+    a2 = (ds.FATES_BURNFRAC.values * s_per_day)
+
+    awfi = np.divide(a1, a2, out=np.zeros_like(a1), where=a2 != 0)
+
+    return awfi / 1000
+
 
 def plot_area_weighted_fire_intensity(ds,case):
     aw_fi = get_awfi(ds)
@@ -679,51 +820,241 @@ def plot_area_weighted_fire_intensity(ds,case):
     plt.savefig(output_path + "/" + case + "_" + title.replace(" ","-") + ".png")
     plt.clf()
 
+#def get_n_fire_months(ds):
+#    aw_fi = get_awfi(ds)
+#    n_months = len(aw_fi.values)
+#    aw_fi = aw_fi.where(~np.isnan(aw_fi), 0)
+#    n_fire_months_boolean = aw_fi > 0
+#    n_fire_months = np.sum(n_fire_months_boolean.values)
+#    return n_fire_months
+
 def get_n_fire_months(ds):
-    aw_fi = get_awfi(ds)
-    n_months = len(aw_fi.values)
-    aw_fi = aw_fi.where(~np.isnan(aw_fi), 0)
-    n_fire_months_boolean = aw_fi > 0
-    n_fire_months = np.sum(n_fire_months_boolean.values)
-    return n_fire_months
+    awfi = get_awfi(ds)
+    return np.count_nonzero(awfi)
+
+#def get_PHS_FLI_thresh(ds,FLI_thresh):
+#    '''
+#    Returns percent of fire months that had a mean severity above FLI_thresh 
+#    ''' 
+#    aw_fi = get_awfi(ds)
+#    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
+#    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
+#    n_fire_months = get_n_fire_months(ds)
+#    PHS = n_months_greater_than_thresh / n_fire_months * 100
+#    return PHS
 
 def get_PHS_FLI_thresh(ds,FLI_thresh):
     '''
     Returns percent of fire months that had a mean severity above FLI_thresh 
     ''' 
-    aw_fi = get_awfi(ds)
-    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
-    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
-    n_fire_months = get_n_fire_months(ds)
-    PHS = n_months_greater_than_thresh / n_fire_months * 100
-    return PHS
+    awfi = get_awfi(ds)
+    n_fire_months = get_n_fire_months(ds) 
+    n_months_high_sev = np.sum(awfi > FLI_thresh)
+    return n_months_high_sev / n_fire_months * 100
 
 def get_PHS_FLI_thresh_isel(ds,i_start,i_end,FLI_thresh):
     '''
     Returns percent of fire months that had a mean severity above FLI_thresh 
-    '''
+    ''' 
+    
     ds = ds.isel(time = slice(i_start,i_end))
-    aw_fi = get_awfi(ds)
-    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
-    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
-    n_fire_months = get_n_fire_months(ds)
-    PHS = n_months_greater_than_thresh / n_fire_months * 100
-    return PHS
+    awfi = get_awfi(ds)
+    n_fire_months = get_n_fire_months(ds) 
+    n_months_high_sev = np.sum(awfi > FLI_thresh)
+    return n_months_high_sev / n_fire_months * 100
 
 
+#def get_PHS_FLI_thresh_isel(ds,i_start,i_end,FLI_thresh):
+#    '''
+#    Returns percent of fire months that had a mean severity above FLI_thresh 
+#    '''
+#    ds = ds.isel(time = slice(i_start,i_end))
+#    aw_fi = get_awfi(ds)
+#    n_months_greater_than_thresh_boolean = aw_fi > FLI_thresh
+#    n_months_greater_than_thresh = np.sum(n_months_greater_than_thresh_boolean.values)
+#    n_fire_months = get_n_fire_months(ds)
+#    PHS = n_months_greater_than_thresh / n_fire_months * 100
+#    return PHS
 
 
+def running_mean(arr, window_size):
+    """
+    Calculate the running mean of a NumPy array.
 
-def get_combustible_fuel(ds):
+    Parameters:
+    - arr: NumPy array
+        The input array for which you want to calculate the running mean.
+    - window_size: int
+        The size of the window used to compute the mean.
+
+    Returns:
+    - mean_arr: NumPy array
+        An array containing the running mean values.
+    """
+    if window_size <= 0:
+        raise ValueError("Window size must be a positive integer.")
+
+    mean_arr = np.zeros_like(arr, dtype=float)  # Initialize the result array with zeros
+    cumsum = np.cumsum(arr)  # Calculate the cumulative sum of the input array
+
+    for i in range(len(arr)):
+        if i < window_size - 1:
+            # For the first few elements, use a smaller window if not enough data is available
+            mean_arr[i] = cumsum[i] / (i + 1)
+        else:
+            # For the rest of the elements, use a window of size 'window_size'
+            mean_arr[i] = (cumsum[i] - cumsum[i - window_size]) / window_size
+
+    return mean_arr
+
+
+def get_combustible_fuel(ds,timeseries = False):
     '''
     Returns the amount of combustible fuel on the landscape. Averages over the time dimension.
     '''
 
     age_by_fuel = agefuel_to_age_by_fuel(ds.FATES_FUEL_AMOUNT_APFC,ds)
-    fates_fuel_amount_by_class = age_by_fuel.sum(dim = "fates_levage").mean(dim = "time")
+
+    if timeseries == False:
+        fates_fuel_amount_by_class = age_by_fuel.sum(dim = "fates_levage").mean(dim = "time")
+    else:
+        fates_fuel_amount_by_class = age_by_fuel.sum(dim = "fates_levage")
+
     fates_trunk_fuel_amount = fates_fuel_amount_by_class.isel(fates_levfuel = 3)
     fates_combustible_fuel_amount = fates_fuel_amount_by_class.sum(dim = "fates_levfuel") - fates_trunk_fuel_amount
     return fates_combustible_fuel_amount.values
+
+
+
+def get_ts(case,years,tag):
+
+    '''
+    Returns a time series df (pandas df) of forest structural and composition metrics for one case and one tag
+
+    Inputs:
+    -years: list of years. Inclusive of the end year.
+    -tag: the inst_tag of the ensemble member to filter for (string, e.g. '0001')
+    '''
+
+    full_time_series_fields = [
+          #have on to import these dimensions
+          'FATES_SEED_PROD_USTORY_SZ',
+          'FATES_VEGC_AP',
+          #patches and cohorts
+          'FATES_NPATCHES',
+          'FATES_PATCHAREA_AP',
+          'FATES_NPATCH_AP',
+          #structure
+          #'FATES_LAI_AP',
+          #density
+          'FATES_NPLANT_PF',
+          'FATES_NPLANT_SZAPPF',
+          'FATES_NPLANT_SZPF',
+          #basal area
+          'FATES_BASALAREA_SZPF',
+          #crown_area
+          'FATES_CANOPYCROWNAREA_PF',
+          'FATES_CANOPYCROWNAREA_APPF',
+          'FATES_CROWNAREA_APPF',
+          'FATES_CROWNAREA_PF',
+          #biomass
+          #'FATES_VEGC_PF','FATES_VEGC_AP',
+          'FATES_VEGC_ABOVEGROUND',
+          #'FATES_VEGC_ABOVEGROUND_SZPF',
+          #growth
+          #'FATES_DDBH_SZPF',
+          #'FATES_DDBH_CANOPY_SZAP','FATES_DDBH_USTORY_SZAP',
+          #mortality
+          'FATES_MORTALITY_PF',
+          #'FATES_MORTALITY_CANOPY_SZAP','FATES_MORTALITY_USTORY_SZAP',
+          'FATES_MORTALITY_BACKGROUND_SZPF','FATES_MORTALITY_HYDRAULIC_SZPF','FATES_MORTALITY_CSTARV_SZPF',
+          'FATES_MORTALITY_FIRE_SZPF','FATES_MORTALITY_CROWNSCORCH_SZPF',
+          'FATES_MORTALITY_SENESCENCE_SZPF','FATES_MORTALITY_TERMINATION_SZPF','FATES_MORTALITY_LOGGING_SZPF',
+          'FATES_MORTALITY_FREEZING_SZPF','FATES_MORTALITY_AGESCEN_SZPF','FATES_MORTALITY_IMPACT_SZPF',
+          #seed production and recruitment
+          #GPP and NPP
+          'FATES_NPP_PF','FATES_NPP_SZPF',
+          'FATES_RECRUITMENT_PF',
+          #'FATES_AUTORESP_SZPF','FATES_MAINTAR_SZPF',
+          #physical environment
+          'SMP',
+          #allocation
+          #'FATES_STOREC_CANOPY_SZPF','FATES_STOREC_USTORY_SZPF',
+          #fire
+          'FATES_FUEL_AMOUNT_APFC',
+          'FATES_BURNFRAC','FATES_IGNITIONS','FATES_FIRE_INTENSITY_BURNFRAC',
+          'FATES_FUEL_BULKD','FATES_FUEL_SAV',
+          'FATES_FUEL_AMOUNT_AP',
+          'FATES_FIRE_INTENSITY_BURNFRAC_AP',
+          'FATES_BURNFRAC_AP',
+          'FATES_NESTEROV_INDEX',
+          'FATES_VEGC_ABOVEGROUND'
+          ]
+
+
+    model_output_root = '/glade/derecho/scratch/adamhb'
+    running_mean_window = 36 #months
+
+    print("Working on",case,"-",tag)
+
+    ds = load_fates_output_data(model_output_root=model_output_root,
+                            case_name = case,
+                            years = years,
+                            fields = full_time_series_fields,
+                            inst_tag = tag,
+                            manual_path = None)
+
+    dates = [convert_cftime_to_datetime(ds.time.values[i]) for i in range(len(ds.time.values))]
+
+
+    ts_vars = ["inst_tag","Date","AGCD","BA_conifer","BA_pine","BA_cedar","BA_fir","BA_oak",
+               "TreeStemD","Pct_shrub_cover_canopy","Pct_shrub_cover","Burned_area",
+               "Pct_conifer_cover_canopy","Pct_oak_cover_canopy","Combustible_fuel"]
+
+    ts_dict = {}
+    for i in ts_vars:
+        ts_dict[i] = None
+
+    ts_dict['inst_tag'] = [tag] * len(dates)
+    ts_dict["Date"] = dates
+    ts_dict["AGCD"] = get_AGCD(ds,ts = True)
+    ts_dict['BA_conifer'] = get_conifer_basal_area_over_time(ds,dbh_min=10)
+    ts_dict['BA_pine'] = get_pft_level_basal_area_over_time(ds,0,dbh_min = 10)
+    ts_dict['BA_cedar'] = get_pft_level_basal_area_over_time(ds,1,dbh_min = 10)
+    ts_dict['BA_fir'] = get_pft_level_basal_area_over_time(ds,2,dbh_min = 10)
+    ts_dict['BA_oak'] = get_oak_basal_area_over_time(ds,dbh_min = 10)
+    ts_dict['TreeStemD'] = get_total_stem_den(ds,trees_only=True,dbh_min=10,over_time=True)
+    ts_dict['Pct_shrub_cover'] = get_pft_level_crown_area(ds,pft_index = 3,canopy_area_only = False,over_time=True)
+    ts_dict['Pct_shrub_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 3,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_conifer_cover_canopy'] = get_conifer_crown_area(ds,canopy_area_only = True, over_time = True)
+    burn_frac = get_mean_annual_burn_frac(ds,over_time=True)
+    ts_dict['Burned_area'] = running_mean(burn_frac, running_mean_window)
+    ts_dict['Combustible_fuel'] = get_combustible_fuel(ds,timeseries = True)
+
+
+    # Get the running mean of PHS
+    iterations = len(ds.time) // running_mean_window
+    PHS_dates = []
+    PHS_3500 = []
+    PHS_1700 = []
+    for i in range(iterations):
+        start_time_index = i * running_mean_window
+        end_time_index = min(start_time_index + running_mean_window, len(ds.time))
+        mid_time_index = start_time_index + (running_mean_window // 2)
+        mid_date = convert_cftime_to_datetime(ds.time.values[mid_time_index])
+        PHS_dates.append(mid_date)
+        PHS_3500.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,3500))
+        PHS_1700.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,1700))
+    PHS_dict = {}
+    PHS_dict['Date']= PHS_dates
+    PHS_dict['Pct_high_severity_1700'] = PHS_1700
+    PHS_dict['Pct_high_severity_3500'] = PHS_3500
+    df_PHS = pd.DataFrame(PHS_dict)
+    df = pd.DataFrame(ts_dict)
+    
+    return pd.merge(df,df_PHS,on="Date",how = "left")
+
 
     
 def get_PHS(ds,start_date,end_date):
