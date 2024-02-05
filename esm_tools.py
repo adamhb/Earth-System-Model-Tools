@@ -138,7 +138,7 @@ def filter_model_output_by_year(file_list, start_year, end_year):
     '''
 
     # Regular expression to find YYYY-MM pattern
-    date_pattern = re.compile(r'(\d{4})-(\d{2})')
+    date_pattern = re.compile(r'(\d{4})-(\d{2}).nc')
 
     # Filtered list of files
     filtered_files = []
@@ -146,7 +146,10 @@ def filter_model_output_by_year(file_list, start_year, end_year):
     # Iterate over files in the list
     for file_name in file_list:
         # Search for the date pattern in the filename
+        
         match = date_pattern.search(file_name)
+        
+
         if match:
             year, month = map(int, match.groups())
             file_date = date(year, month, 1)  # Create a date object
@@ -282,6 +285,7 @@ def load_fates_output_data(model_output_root, case_name, years, fields,
     Load fates data from netcdf files
 
     '''
+
     if case_name == None:
         return None
     
@@ -1051,7 +1055,10 @@ def get_ts(case,years,tag):
     PHS_dict['Pct_high_severity_1700'] = PHS_1700
     PHS_dict['Pct_high_severity_3500'] = PHS_3500
     df_PHS = pd.DataFrame(PHS_dict)
+
+
     df = pd.DataFrame(ts_dict)
+
     
     return pd.merge(df,df_PHS,on="Date",how = "left")
 
