@@ -389,6 +389,10 @@ def assign_variable_to_netcdf(file_path, variable_name, new_value):
             # Assign a value
             # The way you assign depends on the shape and dimensions of the variable
             # For a single-value variable:
+
+            if new_value == -999 | new_value == "-999":
+                return
+
             variable[...] = new_value  # Replace new_value with the value you want to assign
         
             # For a multi-dimensional variable, specify indices or slices
@@ -555,7 +559,7 @@ def get_tree_basal_area_over_time(ds,dbh_min = None):
     basal_area_pf = basal_area.sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
     return basal_area_pf
 
-def get_conifer_basal_area_over_time(ds,dbh_min = None):
+def get_conifer_basal_area_over_time(ds,dbh_min = None, snapshot = False):
     '''Returns a numpy array of pft-specific basal area [m-2 ha-1]
       
 
@@ -563,7 +567,12 @@ def get_conifer_basal_area_over_time(ds,dbh_min = None):
     basal_area = scpf_to_scls_by_pft(ds.FATES_BASALAREA_SZPF, ds)
     basal_area = basal_area.sel(fates_levscls = slice(dbh_min,None))
     basal_area = basal_area.sel(fates_levpft = slice(0,3))
-    basal_area_pf = basal_area.sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
+    
+    if snapshot == True:
+        basal_area_pf = basal_area.mean(dim = "time").sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
+    else:
+        basal_area_pf = basal_area.sum(dim="fates_levscls").sum(dim = "fates_levpft").values * m2_per_ha
+    
     return basal_area_pf
 
 def get_oak_basal_area_over_time(ds,dbh_min = None):
@@ -712,10 +721,16 @@ def get_AGCD(ds,ts = False):
 ## Productivity ##
 ##################
 
-def get_total_npp(ds):
+def get_total_npp(ds,over_time = False):
     '''Returns NPP [kg m-2 yr-1]'''
-    npp_total = ds.FATES_NPP_PF.sum(dim="fates_levpft").mean(dim = "time").values * s_per_yr
-    return npp_total
+
+    if over_time == False:
+        npp_total = ds.FATES_NPP_PF.sum(dim="fates_levpft").mean(dim = "time").values * s_per_yr
+        return npp_total
+    else:
+        npp_total = ds.FATES_NPP_PF.sum(dim="fates_levpft").values * s_per_yr
+        return npp_total
+
 
 #########
 # Light #
@@ -1013,7 +1028,9 @@ def get_ts(case,years,tag):
 
     ts_vars = ["inst_tag","Date","AGCD","BA_conifer","BA_pine","BA_cedar","BA_fir","BA_oak",
                "TreeStemD","Pct_shrub_cover_canopy","Pct_shrub_cover","Burned_area",
-               "Pct_conifer_cover_canopy","Pct_oak_cover_canopy","Combustible_fuel"]
+               "Pct_conifer_cover_canopy","Pct_oak_cover_canopy","Pct_pine_cover_canopy",
+               "Pct_cedar_cover_canopy","Pct_fir_cover_canopy",
+               "Combustible_fuel","NPP"]
 
     ts_dict = {}
     for i in ts_vars:
@@ -1032,9 +1049,16 @@ def get_ts(case,years,tag):
     ts_dict['Pct_shrub_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 3,canopy_area_only = True,over_time=True)
     ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
     ts_dict['Pct_conifer_cover_canopy'] = get_conifer_crown_area(ds,canopy_area_only = True, over_time = True)
+    ts_dict['Pct_pine_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 0,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_cedar_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 1,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_fir_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 2,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
+    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
     burn_frac = get_mean_annual_burn_frac(ds,over_time=True)
     ts_dict['Burned_area'] = running_mean(burn_frac, running_mean_window)
     ts_dict['Combustible_fuel'] = get_combustible_fuel(ds,timeseries = True)
+    ts_dict['NPP'] = get_total_npp(ds,over_time = True)
 
 
     # Get the running mean of PHS
