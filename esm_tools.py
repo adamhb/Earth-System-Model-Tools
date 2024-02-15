@@ -390,11 +390,12 @@ def assign_variable_to_netcdf(file_path, variable_name, new_value):
             # The way you assign depends on the shape and dimensions of the variable
             # For a single-value variable:
 
-            if new_value == -999 | new_value == "-999":
+            if (new_value == -999) | (new_value == "-999"):
+                print("Not changing variable value")
                 return
 
             variable[...] = new_value  # Replace new_value with the value you want to assign
-        
+            print("Changed {} to {}".format(variable_name,new_value))
             # For a multi-dimensional variable, specify indices or slices
             # Example for a 2D variable (like temperature at a specific time and place):
             # variable[time_index, place_index] = new_value
