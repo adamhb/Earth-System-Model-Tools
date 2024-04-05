@@ -30,7 +30,7 @@ g_per_kg = 1000
 mm_per_m = 1000
 months_per_yr = 12
 s_per_month = 3600 * 24 * 30.4
-
+mpa_per_mm_suction = 1e5
 
 
 
@@ -664,12 +664,15 @@ def get_n_failed_pfts(arr,ba_thresh=0.1):
     return failed.astype(int).sum()
 
 
-def get_resprout_stem_den(ds,pft = None):
+def get_resprout_stem_den(ds,pft = None,overtime = False):
     
     if pft == None:
         den = ds.FATES_NPLANT_RESPROUT_PF.sum(dim = "fates_levpft").mean(dim = "time") * m2_per_ha
     else:
-        den = ds.FATES_NPLANT_RESPROUT_PF.isel(fates_levpft = pft).mean(dim = "time") * m2_per_ha
+        if overtime == False:
+            den = ds.FATES_NPLANT_RESPROUT_PF.isel(fates_levpft = pft).mean(dim = "time") * m2_per_ha
+        else:
+            den = ds.FATES_NPLANT_RESPROUT_PF.isel(fates_levpft = pft) * m2_per_ha
     
     return den.values
 
@@ -698,6 +701,17 @@ def get_total_stem_den(ds,trees_only=True, dbh_min=None, resprout = False, over_
         den_trees = den_total - den_shrub
         den_trees = den_trees.values * m2_per_ha
         return den_trees
+
+def get_pft_specific_stem_den(ds,pft_index,dbh_min=None):
+    den = scpf_to_scls_by_pft(ds.FATES_NPLANT_SZPF, ds)
+    
+    # Select based on dbh min and then sum over size classes
+    den = den.sel(fates_levscls = slice(dbh_min,None)).sum(dim = "fates_levscls")
+
+    # Select pft and make per hectare
+    den = den.isel(fates_levpft = pft_index) * m2_per_ha
+
+    return den.values
 
 
 def get_AGB(ds):
@@ -928,7 +942,7 @@ def running_mean(arr, window_size):
     return mean_arr
 
 
-def get_combustible_fuel(ds,timeseries = False):
+def get_combustible_fuel(ds,timeseries = False,all_fuel = False):
     '''
     Returns the amount of combustible fuel on the landscape. Averages over the time dimension.
     '''
@@ -942,9 +956,50 @@ def get_combustible_fuel(ds,timeseries = False):
 
     fates_trunk_fuel_amount = fates_fuel_amount_by_class.isel(fates_levfuel = 3)
     fates_combustible_fuel_amount = fates_fuel_amount_by_class.sum(dim = "fates_levfuel") - fates_trunk_fuel_amount
-    return fates_combustible_fuel_amount.values
+    
+    if all_fuel == True:
+        return fates_fuel_amount_by_class.sum(dim = "fates_levfuel").values
+    else:
+        return fates_combustible_fuel_amount.values
+
+def get_mort_rate(ds,pft_index,mort_path,mort_metric):
+        
+    # Dictionary of mortality variable names
+    mort_var_dict = {'fire':'FATES_MORTALITY_FIRE_SZPF',
+                         'cstarve':'FATES_MORTALITY_CSTARV_SZPF',
+                         'hydr':'FATES_MORTALITY_HYDRAULIC_SZPF',
+                         'back':'FATES_MORTALITY_BACKGROUND_SZPF',
+                         'sen':'FATES_MORTALITY_SENESCENCE_SZPF'}
+    xarr = ds[mort_var_dict[mort_path]]
+    xarr = scpf_to_scls_by_pft(xarr, ds)
+    xarr = xarr.isel(fates_levpft = pft_index).sum(dim = 'fates_levscls')
+
+    if mort_metric == "n_per_ha":
+        xarr = xarr * m2_per_ha
+        
+    elif mort_metric == "per_cap":
+        n = ds['FATES_NPLANT_PF'].isel(fates_levpft = pft_index)
+        
+        # Calculate monthly per capita mortality rate
+        xarr = xarr / n / months_per_yr
+
+    else:
+        return
+
+    return xarr.values
+
+def get_smp(ds, level_index):
+    return ds['SMP'].isel(levgrnd = level_index) / mpa_per_mm_suction
 
 
+def get_rec_rate(ds, pft_index):
+    rec = ds['FATES_RECRUITMENT_PF'].isel(fates_levpft=pft_index) * m2_per_ha
+    return rec.values
+
+def get_seedbank(ds,pft_index):
+    # units: Kg m-2
+    seed_bank = ds['FATES_SEEDBANK_PF'].isel(fates_levpft=pft_index)
+    return seed_bank.values
 
 def get_ts(case,years,tag):
 
@@ -967,6 +1022,7 @@ def get_ts(case,years,tag):
           #structure
           #'FATES_LAI_AP',
           #density
+          'FATES_NPLANT_RESPROUT_PF',
           'FATES_NPLANT_PF',
           'FATES_NPLANT_SZAPPF',
           'FATES_NPLANT_SZPF',
@@ -994,7 +1050,7 @@ def get_ts(case,years,tag):
           #seed production and recruitment
           #GPP and NPP
           'FATES_NPP_PF','FATES_NPP_SZPF',
-          'FATES_RECRUITMENT_PF',
+          'FATES_RECRUITMENT_PF','FATES_SEEDBANK_PF',
           #'FATES_AUTORESP_SZPF','FATES_MAINTAR_SZPF',
           #physical environment
           'SMP',
@@ -1008,7 +1064,6 @@ def get_ts(case,years,tag):
           'FATES_FIRE_INTENSITY_BURNFRAC_AP',
           'FATES_BURNFRAC_AP',
           'FATES_NESTEROV_INDEX',
-          'FATES_VEGC_ABOVEGROUND'
           ]
 
 
@@ -1031,7 +1086,9 @@ def get_ts(case,years,tag):
                "TreeStemD","Pct_shrub_cover_canopy","Pct_shrub_cover","Burned_area",
                "Pct_conifer_cover_canopy","Pct_oak_cover_canopy","Pct_pine_cover_canopy",
                "Pct_cedar_cover_canopy","Pct_fir_cover_canopy",
-               "Combustible_fuel","NPP"]
+               "Combustible_fuel","NPP","SMP","All_fuel","ResproutStemDen_oak","ResproutStemDen_shrub"]
+    
+   
 
     ts_dict = {}
     for i in ts_vars:
@@ -1053,14 +1110,32 @@ def get_ts(case,years,tag):
     ts_dict['Pct_pine_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 0,canopy_area_only = True,over_time=True)
     ts_dict['Pct_cedar_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 1,canopy_area_only = True,over_time=True)
     ts_dict['Pct_fir_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 2,canopy_area_only = True,over_time=True)
-    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
-    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
-    ts_dict['Pct_oak_cover_canopy'] = get_pft_level_crown_area(ds,pft_index = 4,canopy_area_only = True,over_time=True)
     burn_frac = get_mean_annual_burn_frac(ds,over_time=True)
     ts_dict['Burned_area'] = running_mean(burn_frac, running_mean_window)
     ts_dict['Combustible_fuel'] = get_combustible_fuel(ds,timeseries = True)
+    ts_dict['All_fuel'] = get_combustible_fuel(ds,timeseries = True,all_fuel = True)
     ts_dict['NPP'] = get_total_npp(ds,over_time = True)
+    ts_dict['SMP'] = get_smp(ds,5) # index = 5 means 0.4 meters below surface
+    ts_dict['ResproutStemDen_oak'] = get_resprout_stem_den(ds,pft = 4,overtime = True)
+    ts_dict['ResproutStemDen_shrub'] = get_resprout_stem_den(ds,pft = 3,overtime = True)
+    
+    # Add the mort rates to the ts_vars
+    for pft_index,pf in enumerate(['pine','cedar','fir','shrub','oak']):
+        for mort_path in ['fire','cstarve','hydr','back','sen']:
+            for mort_metric in ['per_cap','n_per_ha']:
+                mort_var = '_'.join(['mort',pf,mort_path,mort_metric])
+                ts_dict[mort_var] = get_mort_rate(ds,pft_index,mort_path,mort_metric)
 
+    # Add the recruitment rates, seedbank, and stem den vars to the ts_vars dict
+    for pft_index,pf in enumerate(['pine','cedar','fir','shrub','oak']):
+        rec_var = '_'.join(['Rec',pf])
+        seedbank_var = '_'.join(['Seedbank',pf])
+        stem_den_var = '_'.join(['StemD',pf])
+        stem_den10_var = '_'.join(['StemD10',pf])
+        ts_dict[rec_var] = get_rec_rate(ds,pft_index)
+        ts_dict[seedbank_var] = get_seedbank(ds,pft_index)
+        ts_dict[stem_den_var] = get_pft_specific_stem_den(ds,pft_index,dbh_min=None)
+        ts_dict[stem_den10_var] = get_pft_specific_stem_den(ds,pft_index,dbh_min=10)
 
     # Get the running mean of PHS
     iterations = len(ds.time) // running_mean_window
