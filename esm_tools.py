@@ -1,4 +1,5 @@
 #funcs
+from fields import fields
 import netCDF4 as nc4
 import sys
 import glob
@@ -31,7 +32,7 @@ mm_per_m = 1000
 months_per_yr = 12
 s_per_month = 3600 * 24 * 30.4
 mpa_per_mm_suction = 1e5
-
+pft_names = ['pine','cedar','fir','shrub','oak']
 
 
 #################################
@@ -538,6 +539,65 @@ def per_capita_rate(xarr,xds,unit_conversion):
 # Forest structure #
 ####################
 
+
+def get_size_class_distribution(case_name,years,metric = "density", plot = True, tag_numbers = [2,  8, 14, 15, 22, 24, 25, 26, 30, 33, 46, 48, 50, 51, 52], model_output_root = '/glade/derecho/scratch/adamhb', by_pft = False):
+
+    inst_tags = inst_to_tag(tag_numbers)
+    output = pd.DataFrame()
+
+    for inst_tag in inst_tags:
+        ds = load_fates_output_data(model_output_root=model_output_root,
+                                    case_name = case_name,
+                                    years = years,
+                                    fields = fields,
+                                    inst_tag = inst_tag,
+                                    manual_path = None)
+
+        if metric == "ba":
+            fates_var = 'FATES_BASALAREA_SZPF'
+        if metric == "density":
+            fates_var = 'FATES_NPLANT_SZPF'
+
+
+        if by_pft == True:
+
+           for i_pft in list(range(3)):
+               xarr = scpf_to_scls_by_pft(ds[fates_var], ds).mean(dim = "time").\
+                     sel(fates_levpft = slice(i_pft,i_pft + 1)).sel(fates_levscls = slice(5,None))
+
+               size_class = xarr.fates_levscls
+               vals = xarr.values * m2_per_ha
+               tmp = pd.DataFrame({'size_class':size_class,'density':vals, 'pft':pft_names[i_pft]})
+               tmp['inst_tag'] = inst_tag
+               output = pd.concat([output,tmp],axis = 0)
+
+        else:
+
+            xarr = scpf_to_scls_by_pft(ds[fates_var], ds).mean(dim = "time").\
+            sel(fates_levpft = slice(0,3)).sum(dim = 'fates_levpft').sel(fates_levscls = slice(5,None))
+            
+            size_class = xarr.fates_levscls
+            vals = xarr.values * m2_per_ha
+            tmp = pd.DataFrame({'size_class':size_class,'density':vals})
+            tmp['inst_tag'] = inst_tag
+            output = pd.concat([output,tmp],axis = 0)
+
+    return output
+    if plot == True:
+        plt.rc('font', size=12)
+        # Creating the box and whisker plot
+        sns.boxplot(x='size_class', y='density', data=output)
+
+        # Adding titles and labels (optional)
+        plt.title('Conifer size class distribution')
+        plt.xlabel('Size Class [cm dbh]')
+        plt.ylabel('Density [N ha-1]')
+
+        # Display the plot
+        plt.show()
+
+
+
 def get_pft_level_basal_area(ds,dbh_min = None):
     '''Returns a numpy array of pft-specific basal area [m-2 ha-1]
        time-averaged over the timesteps in the dataset (ds)
@@ -833,7 +893,7 @@ def get_mean_annual_burn_frac(ds,start_date=None,end_date=None,over_time = False
 #    aw_fi = ds.FATES_FIRE_INTENSITY_BURNFRAC / (ds.FATES_BURNFRAC * s_per_day) / 1000
 #    return aw_fi
 
-def get_awfi(ds):
+def get_awfi(ds,over_time = True):
     '''
     Returns area-weighted fire intensity (kW m-1)
     '''
@@ -842,7 +902,10 @@ def get_awfi(ds):
 
     awfi = np.divide(a1, a2, out=np.zeros_like(a1), where=a2 != 0)
 
-    return awfi / 1000
+    if over_time == True:
+        return awfi / 1000
+    else:
+        return awfi.mean() / 1000
 
 
 def plot_area_weighted_fire_intensity(ds,case):
@@ -1142,6 +1205,10 @@ def get_ts(case,years,tag):
     PHS_dates = []
     PHS_3500 = []
     PHS_1700 = []
+    PHS_1025 = []
+    PHS_2600 = []
+    awfi = []
+
     for i in range(iterations):
         start_time_index = i * running_mean_window
         end_time_index = min(start_time_index + running_mean_window, len(ds.time))
@@ -1150,10 +1217,16 @@ def get_ts(case,years,tag):
         PHS_dates.append(mid_date)
         PHS_3500.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,3500))
         PHS_1700.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,1700))
+        PHS_1025.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,1025))
+        PHS_2600.append(get_PHS_FLI_thresh_isel(ds,start_time_index,end_time_index,2600))
+        awfi.append(get_awfi(ds,over_time = False))
     PHS_dict = {}
     PHS_dict['Date']= PHS_dates
     PHS_dict['Pct_high_severity_1700'] = PHS_1700
     PHS_dict['Pct_high_severity_3500'] = PHS_3500
+    PHS_dict['Pct_high_severity_1025'] = PHS_1025
+    PHS_dict['Pct_high_severity_2600'] = PHS_2600
+    PHS_dict['AWFI'] = awfi
     df_PHS = pd.DataFrame(PHS_dict)
 
 
